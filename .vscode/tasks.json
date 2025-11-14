@@ -1,0 +1,48 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Start Python Server",
+            "type": "shell",
+            "command": "python -m http.server 8080",
+            "isBackground": true,
+            "problemMatcher": [
+                {
+                    "pattern": [
+                        {
+                            "regexp": "^Serving HTTP on 0.0.0.0 port (\\d+) \\(http://0.0.0.0:(\\d+)\\)$",
+                            "file": 1,
+                            "location": 2,
+                            "message": 3
+                        }
+                    ],
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": "^Serving HTTP on 0.0.0.0 port (\\d+)",
+                        "endsPattern": ""
+                    }
+                }
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Stop Python Server",
+            "type": "shell",
+            "command": "pkill -f 'python -m http.server 8080'",
+            "windows": {
+                "command": "taskkill /F /IM python.exe /FI \"COMMANDLINE eq *http.server 8080*\""
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "silent",
+                "focus": false
+            },
+            "problemMatcher": []
+        }
+    ]
+}
