@@ -6,9 +6,10 @@ const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '.',
   './index.html',
-  './manifest.json'
+  './test.html',
+  './manifest.json',
+  './汉字拼音体.ttf'
   // 添加CDN资源的本地回退版本（如果有）
-  // 字体和其他关键资源
 ];
 
 // 安装事件 - 缓存静态资源
@@ -36,15 +37,18 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheWhitelist.indexOf(cacheName) === -1) {
+        // 过滤掉不需要删除的缓存，避免Promise.all中包含undefined
+          const cachesToDelete = cacheNames.filter((cacheName) => 
+            cacheWhitelist.indexOf(cacheName) === -1
+          );
+          
+          return Promise.all(
+            cachesToDelete.map((cacheName) => {
               // 删除旧缓存
               console.log('删除旧缓存:', cacheName);
               return caches.delete(cacheName);
-            }
-          })
-        );
+            })
+          );
       })
       .then(() => {
         // 立即接管所有客户端
@@ -97,7 +101,11 @@ self.addEventListener('fetch', (event) => {
             if (event.request.headers.get('accept')?.includes('text/html')) {
               return caches.match('.');
             }
-            // 其他资源请求失败返回空响应
+            // 其他资源请求失败返回一个基本的响应，而不是undefined
+            return new Response('Network error happened', {
+              status: 408,
+              headers: { 'Content-Type': 'text/plain' }
+            });
           });
       })
   );
@@ -122,30 +130,20 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// 推送通知事件
+// 推送通知事件（简化版本，因为manifest.json中缺少相关权限声明）
 self.addEventListener('push', (event) => {
   if (!event.data) {
     return;
   }
 
   try {
+    // 简化的通知处理，避免使用可能需要额外权限的功能
     const data = event.data.json();
     const options = {
       body: data.body || '您有新的地址提醒',
       data: {
         url: data.url || '/'
-      },
-      vibrate: [100, 50, 100],
-      actions: [
-        {
-          action: 'view',
-          title: '查看'
-        },
-        {
-          action: 'close',
-          title: '关闭'
-        }
-      ]
+      }
     };
 
     event.waitUntil(
@@ -156,29 +154,28 @@ self.addEventListener('push', (event) => {
   }
 });
 
-// 通知点击事件
+// 通知点击事件（简化版本，移除对已不存在的actions的引用）
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  if (event.action === 'view' || !event.action) {
-    const urlToOpen = event.notification.data?.url || '/';
-    
-    event.waitUntil(
-      self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-        .then((clientList) => {
-          // 如果已经有打开的窗口，直接聚焦
-          for (const client of clientList) {
-            if (client.url === urlToOpen && 'focus' in client) {
-              return client.focus();
-            }
+  // 简化处理，点击任何地方都打开目标URL
+  const urlToOpen = event.notification.data?.url || '/';
+  
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // 如果已经有打开的窗口，直接聚焦
+        for (const client of clientList) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
           }
-          // 否则打开新窗口
-          if (self.clients.openWindow) {
-            return self.clients.openWindow(urlToOpen);
-          }
-        })
-    );
-  }
+        }
+        // 否则打开新窗口
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(urlToOpen);
+        }
+      })
+  );
 });
 
 // 后台消息事件
