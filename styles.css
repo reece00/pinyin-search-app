@@ -79,6 +79,22 @@ html, body {
   max-height: 200px;
 }
 
+#search-results-page {
+  height: 50vh;
+  max-height: 50vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#search-results-search-box {
+  flex: 0 0 auto;
+}
+
+#search-results-list {
+  flex: 1 1 auto;
+  max-height: none;
+}
+
 /* 减少搜索结果项之间的间距 */
 #search-results-list > div {
   margin-bottom: 4px !important;

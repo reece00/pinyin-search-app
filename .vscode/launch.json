@@ -9,6 +9,14 @@
             "request": "launch",
             "name": "Open index.html",
             "file": "${workspaceFolder}/index.html"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run Node server (8080)",
+            "program": "${workspaceFolder}/server.js",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
         }
     ]
 }
