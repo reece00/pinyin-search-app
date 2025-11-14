@@ -1,5 +1,5 @@
 // 缓存版本标识，更新时修改此值以触发缓存更新
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.2.1';
 const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 
 // 需要缓存的资源列表
@@ -8,8 +8,14 @@ const STATIC_ASSETS = [
   './index.html',
   './test.html',
   './manifest.json',
+  './styles.css',
+  './app.js',
+  './app-data.js',
+  './file-management.js',
+  './search-functionality.js',
+  './ui-utils.js',
+  './sync-webdav.js',
   './汉字拼音体.ttf'
-  // 添加CDN资源的本地回退版本（如果有）
 ];
 
 // 安装事件 - 缓存静态资源
