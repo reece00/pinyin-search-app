@@ -6,17 +6,7 @@ const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json',
-  '/icons/icon-72x72.svg',
-  '/icons/icon-96x96.svg',
-  '/icons/icon-128x128.svg',
-  '/icons/icon-144x144.svg',
-  '/icons/icon-152x152.svg',
-  '/icons/icon-192x192.svg',
-  '/icons/icon-384x384.svg',
-  '/icons/icon-512x512.svg',
-  '/icons/icon-maskable-192x192.svg',
-  '/icons/icon-maskable-512x512.svg',
+  '/manifest.json'
   // 添加CDN资源的本地回退版本（如果有）
   // 字体和其他关键资源
 ];
@@ -142,8 +132,6 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
     const options = {
       body: data.body || '您有新的地址提醒',
-      icon: '/icons/icon-192x192.svg',
-      badge: '/icons/icon-72x72.svg',
       data: {
         url: data.url || '/'
       },
