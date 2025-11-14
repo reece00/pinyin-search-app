@@ -36,8 +36,8 @@ jobs:
         run: |
           # 获取当前时间戳
           TIMESTAMP=$(date +%s000)
-          # 更新service-worker.js中的缓存版本号
-          sed -i "s/const CACHE_VERSION = '[0-9]*';/const CACHE_VERSION = '$TIMESTAMP';/g" service-worker.js
+          # 更新service-worker.js中的缓存版本号，匹配包含字母、数字和点的版本号格式
+          sed -i "s/const CACHE_VERSION = '[^']*';/const CACHE_VERSION = '$TIMESTAMP';/g" service-worker.js
           echo "已更新缓存版本号为: $TIMESTAMP"
       
       - name: Setup Pages
