@@ -9,8 +9,8 @@ import {
 } from './file-management.js';
 import { 
   performSearch, showSearchResultsPage, showEditorPage,
-  handleSearchInput, handleSearchResultsInput, handleSearchFocus,
-  clearSearchInput, clearSearchResultsInput, scrollToAddress
+  handleSearchInput, handleSearchFocus,
+  clearSearchInput, scrollToAddress
 } from './search-functionality.js';
 import { 
   showToast, updateLayoutForIOS, preventRubberBandEffect,
@@ -80,8 +80,8 @@ function bindEvents() {
   elements.searchInput.addEventListener('input', () => handleSearchInput(elements));
   elements.searchInput.addEventListener('focus', () => handleSearchFocus(elements));
   elements.clearInputBtn.addEventListener('click', () => clearSearchInput(elements));
-  elements.searchResultsInput.addEventListener('input', () => handleSearchResultsInput(elements));
-  elements.searchResultsClearBtn.addEventListener('click', () => clearSearchResultsInput(elements));
+  // 顶部搜索框已移除，无需绑定其输入事件
+  // 顶部搜索框已移除，清空按钮逻辑不再绑定
   elements.memoEditor.addEventListener('input', handleEditorInput);
   elements.closeSearchResultsButton.addEventListener('click', () => showEditorPage(elements));
   
@@ -115,8 +115,6 @@ function initApp() {
     editorPage: document.getElementById('editor-page'),
     searchResultsPage: document.getElementById('search-results-page'),
     searchResultsList: document.getElementById('search-results-list'),
-    searchResultsInput: document.getElementById('search-results-input'),
-    searchResultsClearBtn: document.getElementById('search-results-clear-btn'),
     closeSearchResultsButton: document.getElementById('close-search-results'),
     resultsCount: document.getElementById('results-count'),
     noResultsMessage: document.getElementById('no-results-message'),
@@ -153,11 +151,6 @@ function initApp() {
   
   // 初始化PWA
   initPWA();
-  
-  // 显示欢迎消息
-  setTimeout(() => {
-    showToast('欢迎使用地址管理应用', elements);
-  }, 500);
   
   console.log('应用初始化完成');
 }

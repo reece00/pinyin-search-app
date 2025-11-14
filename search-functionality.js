@@ -50,30 +50,6 @@ function generatePinyinIndex(address) {
     : (typeof pinyin === 'string' ? pinyin.toLowerCase() : '');
 }
 
-// 为搜索优化的拼音索引生成函数
-function generateSearchableIndexes(address) {
-  if (!address) return [];
-  
-  // 获取完整地址的拼音索引
-  const fullIndex = generatePinyinIndex(address);
-  const indexes = [fullIndex, address.toLowerCase()];
-  
-  // 为词语生成索引
-  const words = splitAddressIntoWords(address);
-  words.forEach(word => {
-    const wordIndex = generatePinyinIndex(word);
-    if (wordIndex && !indexes.includes(wordIndex)) {
-      indexes.push(wordIndex);
-    }
-    // 同时添加词语本身
-    const wordLower = word.toLowerCase();
-    if (!indexes.includes(wordLower)) {
-      indexes.push(wordLower);
-    }
-  });
-  
-  return indexes;
-}
 
 // 将地址拆分为词语
 function splitAddressIntoWords(address) {
@@ -188,10 +164,6 @@ function showSearchResultsPage(results, elements) {
   if (elements.actionButtonsContainer) {
     elements.actionButtonsContainer.classList.add('hidden');
   }
-  
-  // 同步搜索框内容
-  elements.searchResultsInput.value = appData.searchQuery;
-  elements.searchResultsClearBtn.classList.toggle('hidden', !appData.searchQuery);
   
   // 更新结果数量
   elements.resultsCount.textContent = `已找到${results.length}项`;
@@ -446,25 +418,12 @@ function clearSearchInput(elements) {
   appData.searchQuery = '';
   elements.clearInputBtn.classList.add('hidden');
   
-  // 如果搜索结果页面已显示，也清空该页面的搜索框
-  if (!elements.searchResultsPage.classList.contains('hidden')) {
-    elements.searchResultsInput.value = '';
-    elements.searchResultsClearBtn.classList.add('hidden');
-  }
-  
   showEditorPage(elements);
-}
-
-// 清空搜索结果页面的搜索输入
-function clearSearchResultsInput(elements) {
-  elements.searchResultsInput.value = '';
-  elements.searchResultsClearBtn.classList.add('hidden');
-  clearSearchInput(elements);
 }
 
 // 处理搜索输入
 function handleSearchInput(elements) {
-  const query = elements.searchInput.value.trim().toLowerCase().replace(/[^a-z]/g, '');
+  const query = elements.searchInput.value.trim().toLowerCase();
   appData.searchQuery = query;
   
   // 显示/隐藏清空按钮
@@ -472,8 +431,12 @@ function handleSearchInput(elements) {
   
   // 如果搜索结果页面已显示，同步到搜索结果页面的搜索框
   if (!elements.searchResultsPage.classList.contains('hidden')) {
-    elements.searchResultsInput.value = query;
-    elements.searchResultsClearBtn.classList.toggle('hidden', !query);
+    if (elements.searchResultsInput) {
+      elements.searchResultsInput.value = query;
+    }
+    if (elements.searchResultsClearBtn) {
+      elements.searchResultsClearBtn.classList.toggle('hidden', !query);
+    }
   }
   
   // 如果没有搜索词，显示编辑器页面
@@ -492,84 +455,16 @@ function handleSearchInput(elements) {
   }, 300);
 }
 
-// 处理搜索结果页面的搜索输入
-function handleSearchResultsInput(elements) {
-  const query = elements.searchResultsInput.value.trim().toLowerCase().replace(/[^a-z]/g, '');
-  appData.searchQuery = query;
-  
-  // 同步到底部搜索框
-  elements.searchInput.value = query;
-  
-  // 显示/隐藏清空按钮
-  elements.searchResultsClearBtn.classList.toggle('hidden', !query);
-  elements.clearInputBtn.classList.toggle('hidden', !query);
-  
-  // 如果没有搜索词，显示编辑器页面
-  if (!query) {
-    showEditorPage(elements);
-    return;
-  }
-  
-  // 防抖处理
-  if (appData.debounceTimer) {
-    clearTimeout(appData.debounceTimer);
-  }
-  
-  appData.debounceTimer = setTimeout(() => {
-    performSearch(elements);
-  }, 300);
-}
 
 // 处理搜索框焦点事件
 function handleSearchFocus(elements) {
-  const query = elements.searchInput.value.trim().toLowerCase().replace(/[^a-z]/g, '');
+  const query = elements.searchInput.value.trim().toLowerCase();
   if (query) {
     appData.searchQuery = query;
     performSearch(elements);
   }
 }
 
-// 高亮搜索结果
-function highlightSearchResults(elements) {
-  const query = appData.searchQuery;
-  const content = elements.memoEditor.value;
-  
-  if (!query) {
-    // 移除所有高亮
-    elements.memoEditor.value = content;
-    return;
-  }
-  
-  // 解析地址内容
-  const addresses = parseAddressContent(content);
-  const filteredAddresses = searchAddresses(addresses, query);
-  
-  if (filteredAddresses.length === 0) {
-    showToast('未找到匹配地址', elements);
-    return;
-  }
-  
-  // 收集所有匹配的地址
-  const matchingAddresses = filteredAddresses.map(item => item.address);
-  
-  // 在编辑器中高亮匹配的地址
-  let newContent = content;
-  
-  matchingAddresses.forEach(address => {
-    // 创建正则表达式，全局匹配地址
-    const regex = new RegExp(address.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-    // 使用<span>标签包裹匹配的地址（注意：textarea不支持HTML标签）
-    // 这里我们使用特殊字符标记，然后在可视化时处理
-    newContent = newContent.replace(regex, `【${address}】`);
-  });
-  
-  // 由于textarea不支持HTML标签，我们使用特殊字符标记
-  // 实际应用中，如果需要可视化高亮，应该使用contenteditable的div代替textarea
-  elements.memoEditor.value = newContent;
-  
-  // 提示找到的匹配数量
-  showToast(`找到 ${filteredAddresses.length} 个匹配地址`, elements);
-}
 
 // 导出模块
 export {
@@ -583,9 +478,7 @@ export {
   highlightMatchingText,
   scrollToAddress,
   clearSearchInput,
-  clearSearchResultsInput,
   handleSearchInput,
-  handleSearchResultsInput,
   handleSearchFocus,
-  highlightSearchResults
+  
 };

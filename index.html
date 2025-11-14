@@ -74,8 +74,8 @@
   <main class="flex-grow p-4 keyboard-avoidance">
     <!-- 文本编辑器页面 -->
     <div id="editor-page" class="h-full flex flex-col">
-      <!-- 文件名显示 -->
-      <div class="p-2 bg-gray-50 border-b border-gray-200">
+      <!-- 文件名显示（隐藏） -->
+      <div id="filename-bar" class="p-2 bg-gray-50 border-b border-gray-200">
         <div id="filename-display" class="text-sm text-gray-700 truncate text-center">新备忘录1</div>
       </div>
       <textarea id="memo-editor" class="w-full h-full min-h-[300px] p-4 bg-white rounded-lg shadow-sm border border-gray-200 focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none resize-none" placeholder="请输入地址和备注，格式如下：
@@ -91,24 +91,10 @@
     
     <!-- 搜索结果页面 (初始隐藏) -->
     <div id="search-results-page" class="hidden">
-      <!-- 搜索框（在搜索结果页面置顶显示） -->
-      <div id="search-results-search-box" class="relative mb-4">
-        <input 
-          type="text" 
-          id="search-results-input" 
-          placeholder="输入地址首字母搜索（如'bjs'查北京）" 
-          class="w-full pl-4 pr-10 ios-input" 
-          autocapitalize="off"
-          autocorrect="off"
-          spellcheck="false"
-        >
-        <button id="search-results-clear-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hidden ios-button">
-          <i class="fa fa-times-circle"></i>
-        </button>
-      </div>
+      <div id="search-results-top-spacer"></div>
       
       <!-- 搜索结果标题栏 -->
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center mb-2">
         <h2 class="text-lg font-medium">搜索结果</h2>
         <div class="flex items-center space-x-4">
           <span id="results-count" class="text-sm text-secondary">已找到0项</span>
