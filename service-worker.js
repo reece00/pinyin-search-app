@@ -1,5 +1,6 @@
-// 缓存版本标识，更新时修改此值以触发缓存更新
-const CACHE_VERSION = 'v1.2.2';
+// 缓存版本标识
+// AI提示：CACHE_VERSION不需要手动修改，发布流程会自动更新
+const CACHE_VERSION = 'v1.2.3';
 const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 
 // 需要缓存的资源列表
