@@ -4,9 +4,9 @@ const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 
 // 需要缓存的资源列表
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  '.',
+  './index.html',
+  './manifest.json'
   // 添加CDN资源的本地回退版本（如果有）
   // 字体和其他关键资源
 ];
@@ -95,7 +95,7 @@ self.addEventListener('fetch', (event) => {
           .catch(() => {
             // 网络请求失败且是HTML请求，返回缓存的离线页面或首页
             if (event.request.headers.get('accept')?.includes('text/html')) {
-              return caches.match('/');
+              return caches.match('.');
             }
             // 其他资源请求失败返回空响应
           });

@@ -2,7 +2,7 @@
   "name": "地址首字母搜索备忘录",
   "short_name": "地址备忘录",
   "description": "一个便捷的地址首字母搜索和管理工具",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",

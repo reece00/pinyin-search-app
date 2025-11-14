@@ -5,6 +5,7 @@
   <!-- PWA相关meta标签 -->
   <meta name="description" content="一个便捷的地址首字母搜索和管理工具">
   <meta name="theme-color" content="#3b82f6">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="地址备忘录">
@@ -12,13 +13,13 @@
 
   
   <!-- manifest.json -->
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   
   <!-- 自定义字体导入 -->
   <style>
     @font-face {
       font-family: '汉字拼音体';
-      src: url('汉字拼音体.ttf') format('truetype');
+      src: url('./汉字拼音体.ttf') format('truetype');
       font-weight: normal;
       font-style: normal;
     }
@@ -45,7 +46,7 @@
             dark: '#1F2937'
           },
           fontFamily: {
-            sans: ['汉字拼音体', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif', '汉字拼音体']
           },
           boxShadow: {
             'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
@@ -1643,8 +1644,9 @@
     
     // 注册Service Worker
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
+      // 使用setTimeout确保DOM完全加载
+      setTimeout(() => {
+        navigator.serviceWorker.register('service-worker.js')
           .then((registration) => {
             console.log('Service Worker 注册成功:', registration.scope);
             
@@ -1660,9 +1662,9 @@
             });
           })
           .catch((error) => {
-            console.error('Service Worker 注册失败:', error);
+            console.log('Service Worker 注册失败，这在开发环境中是正常的:', error);
           });
-      });
+      }, 1000);
     }
     
     // 处理安装事件
