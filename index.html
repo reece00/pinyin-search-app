@@ -1642,13 +1642,23 @@
     window.addEventListener('scroll', updateLayoutForIOS);
     window.addEventListener('orientationchange', updateLayoutForIOS);
     
-    // 注册Service Worker
-    if ('serviceWorker' in navigator) {
+    // 注册Service Worker - 仅在PWA模式下启用
+    function isPwaMode() {
+      // 检测是否在独立应用模式下运行（PWA模式）
+      // 条件1: 显示模式为独立应用
+      // 条件2: 不是在开发者工具模拟的环境中
+      // 条件3: 移动设备上的全屏模式
+      return (window.matchMedia('(display-mode: standalone)').matches ||
+              (window.navigator.standalone === true) ||
+              (document.referrer && document.referrer.includes('android-app://')));
+    }
+    
+    if ('serviceWorker' in navigator && isPwaMode()) {
       // 使用setTimeout确保DOM完全加载
       setTimeout(() => {
         navigator.serviceWorker.register('service-worker.js')
           .then((registration) => {
-            console.log('Service Worker 注册成功:', registration.scope);
+            console.log('Service Worker 注册成功 (PWA模式):', registration.scope);
             
             // 检查更新
             registration.addEventListener('updatefound', () => {
@@ -1662,9 +1672,11 @@
             });
           })
           .catch((error) => {
-            console.log('Service Worker 注册失败，这在开发环境中是正常的:', error);
+            console.log('Service Worker 注册失败:', error);
           });
       }, 1000);
+    } else if (!isPwaMode()) {
+      console.log('非PWA模式，不注册Service Worker');
     }
     
     // 处理安装事件
