@@ -6,7 +6,8 @@ const appData = {
   debounceTimer: null, // 防抖计时器
   autoSaveTimer: null, // 自动保存计时器
   isModified: false, // 内容是否被修改
-  autoSaveEnabled: true
+  autoSaveEnabled: true,
+  searchSpacerTimer: null // 搜索框失焦后隐藏占位的延迟计时器
 };
 
 // 从本地存储加载数据

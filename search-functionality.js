@@ -174,10 +174,11 @@ function showSearchResultsPage(results, elements) {
   if (elements.searchResultsCloseContainer) {
     elements.searchResultsCloseContainer.classList.remove('hidden');
   }
-  // 根据搜索框是否激活控制顶部占位
+  // 根据搜索框是否激活控制顶部占位（支持失焦延迟隐藏）
   if (elements.searchResultsTopSpacer) {
     const isActive = document.activeElement === elements.searchInput;
-    elements.searchResultsTopSpacer.classList.toggle('hidden', !isActive);
+    const hasPendingHide = appData.searchSpacerTimer != null;
+    elements.searchResultsTopSpacer.classList.toggle('hidden', !isActive && !hasPendingHide);
   }
   
   // 更新结果数量 - 使用新的样式显示在右上角
@@ -198,6 +199,11 @@ function showEditorPage(elements) {
   // 隐藏顶部占位
   if (elements.searchResultsTopSpacer) {
     elements.searchResultsTopSpacer.classList.add('hidden');
+  }
+  // 清除可能存在的隐藏计时器
+  if (appData.searchSpacerTimer) {
+    clearTimeout(appData.searchSpacerTimer);
+    appData.searchSpacerTimer = null;
   }
   
   // 隐藏关闭按钮
@@ -487,16 +493,27 @@ function handleSearchFocus(elements) {
   if (elements.searchResultsTopSpacer) {
     elements.searchResultsTopSpacer.classList.remove('hidden');
   }
+  // 清除可能存在的隐藏计时器，避免刚获得焦点就被隐藏
+  if (appData.searchSpacerTimer) {
+    clearTimeout(appData.searchSpacerTimer);
+    appData.searchSpacerTimer = null;
+  }
   if (query) {
     appData.searchQuery = query;
     performSearch(elements);
   }
 }
 
-// 处理搜索框失焦事件：隐藏顶部占位
+// 处理搜索框失焦事件：延迟1秒隐藏顶部占位，避免点击结果项跳转中断
 function handleSearchBlur(elements) {
   if (elements.searchResultsTopSpacer) {
-    elements.searchResultsTopSpacer.classList.add('hidden');
+    if (appData.searchSpacerTimer) {
+      clearTimeout(appData.searchSpacerTimer);
+    }
+    appData.searchSpacerTimer = setTimeout(() => {
+      elements.searchResultsTopSpacer.classList.add('hidden');
+      appData.searchSpacerTimer = null;
+    }, 700);
   }
 }
 
