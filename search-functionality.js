@@ -16,6 +16,11 @@ function parseAddressContent(content) {
     const address = lines[0].trim();
     const notes = lines.slice(1).join('\n').trim();
     
+    // 跳过只有单行（没有备注）的数据块
+    if (lines.length === 1) {
+      return null;
+    }
+    
     return {
       address,
       notes,
@@ -165,7 +170,17 @@ function showSearchResultsPage(results, elements) {
     elements.actionButtonsContainer.classList.add('hidden');
   }
   
-  // 更新结果数量
+  // 显示关闭按钮
+  if (elements.searchResultsCloseContainer) {
+    elements.searchResultsCloseContainer.classList.remove('hidden');
+  }
+  // 根据搜索框是否激活控制顶部占位
+  if (elements.searchResultsTopSpacer) {
+    const isActive = document.activeElement === elements.searchInput;
+    elements.searchResultsTopSpacer.classList.toggle('hidden', !isActive);
+  }
+  
+  // 更新结果数量 - 使用新的样式显示在右上角
   elements.resultsCount.textContent = `已找到${results.length}项`;
   
   // 渲染搜索结果
@@ -180,6 +195,15 @@ function showSearchResultsPage(results, elements) {
 function showEditorPage(elements) {
   elements.searchResultsPage.classList.add('hidden');
   elements.editorPage.classList.remove('hidden');
+  // 隐藏顶部占位
+  if (elements.searchResultsTopSpacer) {
+    elements.searchResultsTopSpacer.classList.add('hidden');
+  }
+  
+  // 隐藏关闭按钮
+  if (elements.searchResultsCloseContainer) {
+    elements.searchResultsCloseContainer.classList.add('hidden');
+  }
   
   // 显示按钮容器
   if (elements.actionButtonsContainer) {
@@ -459,9 +483,20 @@ function handleSearchInput(elements) {
 // 处理搜索框焦点事件
 function handleSearchFocus(elements) {
   const query = elements.searchInput.value.trim().toLowerCase();
+  // 激活时显示顶部占位
+  if (elements.searchResultsTopSpacer) {
+    elements.searchResultsTopSpacer.classList.remove('hidden');
+  }
   if (query) {
     appData.searchQuery = query;
     performSearch(elements);
+  }
+}
+
+// 处理搜索框失焦事件：隐藏顶部占位
+function handleSearchBlur(elements) {
+  if (elements.searchResultsTopSpacer) {
+    elements.searchResultsTopSpacer.classList.add('hidden');
   }
 }
 
@@ -480,5 +515,6 @@ export {
   clearSearchInput,
   handleSearchInput,
   handleSearchFocus,
+  handleSearchBlur,
   
 };

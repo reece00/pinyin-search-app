@@ -167,6 +167,50 @@ function handleRenameFile(elements) {
   showToast('文件已重命名', elements);
 }
 
+// 重置文件名为第一行文本
+function handleResetFilename(elements) {
+  if (!appData.currentFile) {
+    showToast('没有当前打开的文件', elements);
+    return;
+  }
+  
+  const currentContent = appData.files[appData.currentFile].content;
+  if (!currentContent || !currentContent.trim()) {
+    showToast('文件内容为空，无法重置文件名', elements);
+    return;
+  }
+  
+  // 获取第一行非空文本
+  const lines = currentContent.split('\n').filter(line => line.trim());
+  if (lines.length === 0) {
+    showToast('文件内容为空，无法重置文件名', elements);
+    return;
+  }
+  
+  const firstLine = lines[0].trim();
+  if (firstLine.length > 20) {
+    showToast('第一行文本过长（超过20字符），无法作为文件名', elements);
+    return;
+  }
+  
+  // 检查文件名是否已存在
+  if (appData.files[firstLine]) {
+    showToast('该文件名已存在', elements);
+    return;
+  }
+  
+  // 重命名文件
+  appData.files[firstLine] = appData.files[appData.currentFile];
+  delete appData.files[appData.currentFile];
+  
+  // 更新当前文件名
+  appData.currentFile = firstLine;
+  
+  // 保存数据
+  saveDataToLocalStorage();
+  showToast('文件名已重置为第一行文本', elements);
+}
+
 // 切换文件弹窗
 function toggleFilePopup(elements) {
   if (elements.filePopup) {
@@ -353,6 +397,7 @@ export {
   handleNewFile,
   handleDeleteFile,
   handleRenameFile,
+  handleResetFilename,
   toggleFilePopup,
   closeFilePopup,
   renderFileList,

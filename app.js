@@ -4,12 +4,12 @@ import { runWebDavSync } from './sync-webdav.js';
 import { 
   toggleFilePopup, closeFilePopup, handleDeleteFile, 
   handleNewFile, createNewFile, openFile, 
-  handleRenameFile, handleImportClipboard,
+  handleRenameFile, handleResetFilename, handleImportClipboard,
   renderFileList 
 } from './file-management.js';
 import { 
   performSearch, showSearchResultsPage, showEditorPage,
-  handleSearchInput, handleSearchFocus,
+  handleSearchInput, handleSearchFocus, handleSearchBlur,
   clearSearchInput, scrollToAddress
 } from './search-functionality.js';
 import { 
@@ -39,14 +39,13 @@ function handleEditorInput() {
   appData.isModified = true;
 }
 
-// 绑定所有事件
-function bindEvents() {
-  // 文件操作事件
-  elements.fileButton.addEventListener('click', () => toggleFilePopup(elements));
-  elements.closeFilePopup.addEventListener('click', () => closeFilePopup(elements));
-  elements.newFileButton.addEventListener('click', () => handleNewFile(elements));
-  elements.importClipboardButton.addEventListener('click', () => handleImportClipboard(elements));
-  elements.renameFileButton.addEventListener('click', () => handleRenameFile(elements));
+  // 绑定所有事件
+  function bindEvents() {
+    // 文件操作事件
+    elements.fileButton.addEventListener('click', () => toggleFilePopup(elements));
+    elements.closeFilePopup.addEventListener('click', () => closeFilePopup(elements));
+    elements.newFileButton.addEventListener('click', () => handleNewFile(elements));
+    elements.renameFileButton.addEventListener('click', () => handleRenameFile(elements));
   if (elements.secondaryMenuBtn && elements.secondaryMenu) {
     // 阻止按钮点击事件冒泡，避免立即触发外部关闭
     elements.secondaryMenuBtn.addEventListener('click', (e) => {
@@ -71,6 +70,18 @@ function bindEvents() {
       elements.secondaryMenu.classList.add('hidden');
     });
   }
+  if (elements.menuPasteBtn && elements.secondaryMenu) {
+    elements.menuPasteBtn.addEventListener('click', () => {
+      handleImportClipboard(elements);
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+  if (elements.menuRenameResetBtn && elements.secondaryMenu) {
+    elements.menuRenameResetBtn.addEventListener('click', () => {
+      handleResetFilename(elements);
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
   if (elements.menuSyncBtn && elements.secondaryMenu) {
     elements.menuSyncBtn.addEventListener('click', () => {
       runWebDavSync();
@@ -79,11 +90,12 @@ function bindEvents() {
   }
   elements.searchInput.addEventListener('input', () => handleSearchInput(elements));
   elements.searchInput.addEventListener('focus', () => handleSearchFocus(elements));
+  elements.searchInput.addEventListener('blur', () => handleSearchBlur(elements));
   elements.clearInputBtn.addEventListener('click', () => clearSearchInput(elements));
   // 顶部搜索框已移除，无需绑定其输入事件
   // 顶部搜索框已移除，清空按钮逻辑不再绑定
   elements.memoEditor.addEventListener('input', handleEditorInput);
-  elements.closeSearchResultsButton.addEventListener('click', () => showEditorPage(elements));
+  elements.closeSearchResultsButton.addEventListener('click', () => clearSearchInput(elements));
   
   // 阻止点击弹窗内元素时关闭弹窗
   elements.filePopup.addEventListener('click', (e) => e.stopPropagation());
@@ -103,11 +115,12 @@ function initApp() {
     closeFilePopup: document.getElementById('close-file-popup'),
     fileList: document.getElementById('file-list'),
     newFileButton: document.getElementById('new-file-btn'),
-    importClipboardButton: document.getElementById('import-clipboard-btn'),
     renameFileButton: document.getElementById('rename-file-btn'),
     secondaryMenuBtn: document.getElementById('secondary-menu-btn'),
     secondaryMenu: document.getElementById('secondary-menu'),
     menuSaveBtn: document.getElementById('menu-save-btn'),
+    menuPasteBtn: document.getElementById('menu-paste-btn'),
+    menuRenameResetBtn: document.getElementById('menu-rename-reset-btn'),
     menuSyncBtn: document.getElementById('menu-sync-btn'),
     searchInput: document.getElementById('search-input'),
     clearInputBtn: document.getElementById('clear-input-btn'),
@@ -116,6 +129,8 @@ function initApp() {
     searchResultsPage: document.getElementById('search-results-page'),
     searchResultsList: document.getElementById('search-results-list'),
     closeSearchResultsButton: document.getElementById('close-search-results'),
+    searchResultsTopSpacer: document.getElementById('search-results-top-spacer'),
+    searchResultsCloseContainer: document.getElementById('search-results-close-container'),
     resultsCount: document.getElementById('results-count'),
     noResultsMessage: document.getElementById('no-results-message'),
     autoSaveIndicator: document.getElementById('auto-save-indicator'),

@@ -91,28 +91,32 @@
     
     <!-- 搜索结果页面 (初始隐藏) -->
     <div id="search-results-page" class="hidden">
-      <div id="search-results-top-spacer"></div>
+      <div id="search-results-top-spacer" class="hidden"></div>
       
-      <!-- 搜索结果标题栏 -->
-      <div class="flex justify-between items-center mb-2">
-        <h2 class="text-lg font-medium">搜索结果</h2>
-        <div class="flex items-center space-x-4">
-          <span id="results-count" class="text-sm text-secondary">已找到0项</span>
-          <button id="close-search-results" class="p-2 rounded-full hover:bg-gray-100 text-secondary">
-            <i class="fa fa-times"></i>
-          </button>
+      <!-- 搜索结果列表容器 -->
+      <div class="relative">
+        <!-- 结果计数显示在右上角 -->
+        <div class="absolute top-2 right-2 z-10">
+          <span id="results-count" class="text-base bg-gray-100 text-gray-700 px-4 py-2 rounded-full font-normal shadow-sm">已找到0项</span>
+        </div>
+        
+        <!-- 搜索结果列表 -->
+        <div id="search-results-list" class="space-y-3 overflow-y-auto">
+          <!-- 搜索结果将通过JS动态生成 -->
+        </div>
+        
+        <!-- 未找到结果提示 -->
+        <div id="no-results-message" class="hidden text-center py-10">
+          <i class="fa fa-search text-4xl text-gray-300 mb-3"></i>
+          <p class="text-gray-500">未找到匹配的地址</p>
         </div>
       </div>
       
-      <!-- 搜索结果列表 -->
-      <div id="search-results-list" class="space-y-3 overflow-y-auto">
-        <!-- 搜索结果将通过JS动态生成 -->
-      </div>
-      
-      <!-- 未找到结果提示 -->
-      <div id="no-results-message" class="hidden text-center py-10">
-        <i class="fa fa-search text-4xl text-gray-300 mb-3"></i>
-        <p class="text-gray-500">未找到匹配的地址</p>
+      <!-- 关闭按钮放在右下角 -->
+      <div id="search-results-close-container" class="hidden">
+        <button id="close-search-results" class="text-secondary">
+          <i class="fa fa-times"></i>
+        </button>
       </div>
     </div>
     
@@ -155,9 +159,7 @@
             <button id="rename-file-btn" class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">
               <i class="fa fa-pencil text-lg"></i>
             </button>
-            <button id="import-clipboard-btn" class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">
-              <i class="fa fa-paste text-lg"></i>
-            </button>
+
           </div>
           
           <div class="relative">
@@ -167,6 +169,12 @@
             <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white shadow-lg rounded-lg p-2 w-40 z-20">
               <button id="menu-save-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">
                 <i class="fa fa-save mr-2"></i> 保存
+              </button>
+              <button id="menu-paste-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">
+                <i class="fa fa-paste mr-2"></i> 粘贴
+              </button>
+              <button id="menu-rename-reset-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">
+                <i class="fa fa-refresh mr-2"></i> 重置文件名
               </button>
               <button id="menu-sync-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">
                 <i class="fa fa-refresh mr-2"></i> 同步

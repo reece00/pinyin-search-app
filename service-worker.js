@@ -1,6 +1,6 @@
 // 缓存版本标识
 // AI提示：CACHE_VERSION不需要手动修改，发布流程会自动更新
-const CACHE_VERSION = 'v1.2.3';
+const CACHE_VERSION = 'v1.3.0';
 const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 
 // 需要缓存的资源列表
@@ -16,6 +16,7 @@ const STATIC_ASSETS = [
   './search-functionality.js',
   './ui-utils.js',
   './sync-webdav.js',
+  './server.js',
   './汉字拼音体.ttf'
 ];
 
