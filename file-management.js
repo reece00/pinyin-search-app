@@ -278,18 +278,18 @@ function renderFileList(elements) {
     fileInfo.appendChild(fileName);
     
     const fileActions = document.createElement('div');
-    fileActions.className = 'flex items-center space-x-2';
+    fileActions.className = 'flex items-center space-x-3';
     
     if (appData.currentFile === filename) {
       const currentBadge = document.createElement('span');
-      currentBadge.className = 'text-xs bg-primary text-white px-2 py-1 rounded-full';
+      currentBadge.className = 'text-sm bg-primary text-white px-3 py-1.5 rounded-full min-w-[72px] text-center';
       currentBadge.textContent = '当前';
       fileActions.appendChild(currentBadge);
     }
     
     // 添加删除按钮
     const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'text-xs text-red-500';
+    deleteBtn.className = 'text-sm bg-red-100 text-red-600 px-3 py-1.5 rounded-full border border-red-200 hover:bg-red-200 min-w-[72px] transition-colors';
     deleteBtn.textContent = '删除';
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();

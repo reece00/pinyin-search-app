@@ -39,6 +39,32 @@ function handleEditorInput() {
   appData.isModified = true;
 }
 
+// 动态计算主编辑框高度（排除底部工具栏与文件名栏）
+function adjustEditorHeight() {
+  const editorEl = elements.memoEditor;
+  const mainEl = elements.appMain || document.querySelector('main');
+  const footerEl = elements.appFooter || document.querySelector('footer');
+  const filenameBarEl = elements.filenameBar || document.getElementById('filename-bar');
+
+  if (!editorEl || !mainEl || !footerEl || !filenameBarEl) {
+    return;
+  }
+
+  const viewportHeight = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
+  const footerH = footerEl.offsetHeight || 0;
+  const fileBarH = filenameBarEl.offsetHeight || 0;
+
+  const mainStyle = getComputedStyle(mainEl);
+  const mainPadTop = parseFloat(mainStyle.paddingTop) || 0;
+  const mainPadBottom = parseFloat(mainStyle.paddingBottom) || 0;
+
+  const desiredHeight = viewportHeight - footerH - fileBarH - mainPadTop - mainPadBottom;
+  const minHeight = 200;
+  const heightPx = Math.max(minHeight, Math.floor(desiredHeight));
+
+  editorEl.style.height = `${heightPx}px`;
+}
+
   // 绑定所有事件
   function bindEvents() {
     // 文件操作事件
@@ -110,6 +136,9 @@ function initApp() {
   // 获取DOM元素引用
   elements = {
     memoEditor: document.getElementById('memo-editor'),
+    filenameBar: document.getElementById('filename-bar'),
+    appMain: document.querySelector('main'),
+    appFooter: document.querySelector('footer'),
     fileButton: document.getElementById('file-switch-btn'),
     filePopup: document.getElementById('file-popup'),
     closeFilePopup: document.getElementById('close-file-popup'),
@@ -157,9 +186,20 @@ function initApp() {
   
   // 绑定事件
   bindEvents();
+
+  // 初始计算编辑器高度
+  adjustEditorHeight();
+
+  // 视口变化时重新计算（适配移动端键盘、旋转等）
+  window.addEventListener('resize', adjustEditorHeight);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', adjustEditorHeight);
+  }
   
   // 适配iOS布局
   updateLayoutForIOS(elements);
+  // 布局更新后再计算一次高度，确保安全区与工具栏生效
+  adjustEditorHeight();
   
   // 阻止橡皮筋效果
   preventRubberBandEffect();
