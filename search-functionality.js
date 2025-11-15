@@ -139,6 +139,11 @@ function searchAddresses(addresses, query) {
 // 执行搜索 - 搜索所有备忘录文件
 function performSearch(elements) {
   const query = appData.searchQuery;
+  // 空查询不进入搜索结果页
+  if (!query) {
+    showEditorPage(elements);
+    return;
+  }
   
   // 遍历所有文件，收集所有地址
   let allAddresses = [];
@@ -471,6 +476,11 @@ function handleSearchInput(elements) {
   
   // 如果没有搜索词，显示编辑器页面
   if (!query) {
+    // 清除可能尚未触发的搜索防抖
+    if (appData.debounceTimer) {
+      clearTimeout(appData.debounceTimer);
+      appData.debounceTimer = null;
+    }
     showEditorPage(elements);
     return;
   }
@@ -513,7 +523,7 @@ function handleSearchBlur(elements) {
     appData.searchSpacerTimer = setTimeout(() => {
       elements.searchResultsTopSpacer.classList.add('hidden');
       appData.searchSpacerTimer = null;
-    }, 700);
+    }, 1000);
   }
 }
 
