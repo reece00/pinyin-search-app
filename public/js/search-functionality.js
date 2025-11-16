@@ -27,6 +27,10 @@ function isSearchResultsVisible(elements) {
   return elements && elements.searchResultsPage && !elements.searchResultsPage.classList.contains('hidden');
 }
 
+function isPWAInstalled() {
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || (navigator.standalone === true);
+}
+
 function updateTopSpacerVisibility(elements) {
   if (!elements || !elements.searchResultsTopSpacer) return;
   const isActive = document.activeElement === elements.searchInput;
@@ -35,6 +39,9 @@ function updateTopSpacerVisibility(elements) {
     elements.searchInput && elements.searchInput.value.trim().length > 0
   ) || (appData.searchQuery && appData.searchQuery.length > 0);
   const shouldShow = isSearchResultsVisible(elements) && hasQuery && (isActive || hasPendingHide);
+  if (shouldShow) {
+    elements.searchResultsTopSpacer.style.height = isPWAInstalled() ? 'calc(40vh + var(--safe-area-inset-top))' : '32vh';
+  }
   elements.searchResultsTopSpacer.classList.toggle('hidden', !shouldShow);
 }
 
