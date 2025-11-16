@@ -110,14 +110,17 @@
         <div class="flex justify-between items-center">
           <div class="flex space-x-4">
             <button id="file-switch-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">文件</button>
-            <button id="new-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">新建</button>
+            <button id="prev-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">上一个</button>
+            <button id="next-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">下一个</button>
             <button id="rename-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">重命名</button>
-
+          
           </div>
           
           <div class="relative">
             <button id="secondary-menu-btn" class="bg-primary text-white px-6 py-3 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center ios-button">更多</button>
             <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white shadow-lg rounded-lg p-2 w-40 z-20">
+              <button id="menu-new-file-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">新建</button>
+              <button id="menu-delete-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">删除</button>
               <button id="menu-save-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">保存</button>
               <button id="menu-paste-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">粘贴</button>
               <button id="menu-rename-reset-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">重置文件名</button>

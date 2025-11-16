@@ -88,13 +88,92 @@ function setupLayoutObservers() {
   roFileBar.observe(filenameBarEl);
 }
 
+function getFileOrder() {
+  return Object.keys(appData.files);
+}
+
+function switchToPrevFile() {
+  const files = getFileOrder();
+  if (files.length <= 1) {
+    showToast('只有一个文件', elements);
+    return;
+  }
+  const idx = files.indexOf(appData.currentFile);
+  if (idx > 0) {
+    openFile(files[idx - 1], elements);
+  } else {
+    showToast('已是第一个文件', elements);
+  }
+}
+
+function switchToNextFile() {
+  const files = getFileOrder();
+  if (files.length <= 1) {
+    showToast('只有一个文件', elements);
+    return;
+  }
+  const idx = files.indexOf(appData.currentFile);
+  if (idx >= 0 && idx < files.length - 1) {
+    openFile(files[idx + 1], elements);
+  } else {
+    showToast('已是最后一个文件', elements);
+  }
+}
+
+function setupEditorSwipe() {
+  let startX = 0;
+  let startY = 0;
+  let endX = 0;
+  let endY = 0;
+  let tracking = false;
+  const H_THRESHOLD = 60;
+  const V_LIMIT = 40;
+  elements.memoEditor.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    endX = startX;
+    endY = startY;
+    tracking = true;
+  }, { passive: true });
+  elements.memoEditor.addEventListener('touchmove', (e) => {
+    if (!tracking || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    endX = t.clientX;
+    endY = t.clientY;
+  }, { passive: true });
+  elements.memoEditor.addEventListener('touchend', () => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = endX - startX;
+    const dy = endY - startY;
+    if (Math.abs(dx) >= H_THRESHOLD && Math.abs(dy) <= V_LIMIT) {
+      if (dx < 0) {
+        switchToNextFile();
+      } else if (dx > 0) {
+        switchToPrevFile();
+      }
+    }
+    startX = 0;
+    startY = 0;
+    endX = 0;
+    endY = 0;
+  });
+}
+
   // 绑定所有事件
   function bindEvents() {
     // 文件操作事件
     elements.fileButton.addEventListener('click', () => toggleFilePopup(elements));
     elements.closeFilePopup.addEventListener('click', () => closeFilePopup(elements));
-    elements.newFileButton.addEventListener('click', () => handleNewFile(elements));
     elements.renameFileButton.addEventListener('click', () => handleRenameFile(elements));
+  if (elements.prevFileButton) {
+    elements.prevFileButton.addEventListener('click', () => switchToPrevFile());
+  }
+  if (elements.nextFileButton) {
+    elements.nextFileButton.addEventListener('click', () => switchToNextFile());
+  }
   if (elements.secondaryMenuBtn && elements.secondaryMenu) {
     // 阻止按钮点击事件冒泡，避免立即触发外部关闭
     elements.secondaryMenuBtn.addEventListener('click', (e) => {
@@ -116,6 +195,20 @@ function setupLayoutObservers() {
     elements.menuSaveBtn.addEventListener('click', () => {
       saveCurrentFile(elements);
       showToast('已保存', elements);
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+  if (elements.menuNewFileBtn && elements.secondaryMenu) {
+    elements.menuNewFileBtn.addEventListener('click', () => {
+      handleNewFile(elements);
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+  if (elements.menuDeleteBtn && elements.secondaryMenu) {
+    elements.menuDeleteBtn.addEventListener('click', () => {
+      if (appData.currentFile) {
+        handleDeleteFile(appData.currentFile, elements);
+      }
       elements.secondaryMenu.classList.add('hidden');
     });
   }
@@ -190,6 +283,7 @@ function setupLayoutObservers() {
   elements.filePopup.addEventListener('click', (e) => e.stopPropagation());
   
   // 绑定文件列表点击事件（由renderFileList函数内部绑定）
+  setupEditorSwipe();
 }
 
 // 初始化应用
@@ -206,10 +300,13 @@ function initApp() {
     filePopup: document.getElementById('file-popup'),
     closeFilePopup: document.getElementById('close-file-popup'),
     fileList: document.getElementById('file-list'),
-    newFileButton: document.getElementById('new-file-btn'),
+    prevFileButton: document.getElementById('prev-file-btn'),
+    nextFileButton: document.getElementById('next-file-btn'),
     renameFileButton: document.getElementById('rename-file-btn'),
     secondaryMenuBtn: document.getElementById('secondary-menu-btn'),
     secondaryMenu: document.getElementById('secondary-menu'),
+    menuNewFileBtn: document.getElementById('menu-new-file-btn'),
+    menuDeleteBtn: document.getElementById('menu-delete-btn'),
     menuSaveBtn: document.getElementById('menu-save-btn'),
     menuPasteBtn: document.getElementById('menu-paste-btn'),
     menuRenameResetBtn: document.getElementById('menu-rename-reset-btn'),
