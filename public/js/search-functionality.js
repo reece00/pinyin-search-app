@@ -14,13 +14,28 @@ function loadPinyinPro() {
   if (pinyinProLoadPromise) return pinyinProLoadPromise;
   pinyinProLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = '../pinyin-pro.js';
+    script.src = './pinyin-pro.js';
     script.async = true;
     script.onload = () => resolve(globalThis.pinyinPro);
     script.onerror = () => reject(new Error('pinyin-pro load error'));
     document.head.appendChild(script);
   });
   return pinyinProLoadPromise;
+}
+
+function isSearchResultsVisible(elements) {
+  return elements && elements.searchResultsPage && !elements.searchResultsPage.classList.contains('hidden');
+}
+
+function updateTopSpacerVisibility(elements) {
+  if (!elements || !elements.searchResultsTopSpacer) return;
+  const isActive = document.activeElement === elements.searchInput;
+  const hasPendingHide = appData.searchSpacerTimer != null;
+  const hasQuery = (
+    elements.searchInput && elements.searchInput.value.trim().length > 0
+  ) || (appData.searchQuery && appData.searchQuery.length > 0);
+  const shouldShow = isSearchResultsVisible(elements) && hasQuery && (isActive || hasPendingHide);
+  elements.searchResultsTopSpacer.classList.toggle('hidden', !shouldShow);
 }
 
 function scheduleFirstSearchOnce(elements) {
@@ -214,12 +229,7 @@ function showSearchResultsPage(results, elements) {
   if (elements.searchResultsCloseContainer) {
     elements.searchResultsCloseContainer.classList.remove('hidden');
   }
-  // 根据搜索框是否激活控制顶部占位（支持失焦延迟隐藏）
-  if (elements.searchResultsTopSpacer) {
-    const isActive = document.activeElement === elements.searchInput;
-    const hasPendingHide = appData.searchSpacerTimer != null;
-    elements.searchResultsTopSpacer.classList.toggle('hidden', !isActive && !hasPendingHide);
-  }
+  updateTopSpacerVisibility(elements);
   
   // 更新结果数量 - 使用新的样式显示在右上角
   elements.resultsCount.textContent = `已找到${results.length}项`;
@@ -339,7 +349,7 @@ function highlightMatchingText(text, query) {
       // 添加匹配前的文本
       result += text.substring(lastIndex, matchPos);
       // 添加带高亮的匹配文本
-      result += `<span class="bg-yellow-200 px-0.5 py-0.5 rounded">${text.substring(matchPos, matchPos + lowerQuery.length)}</span>`;
+      result += `<span class="highlight">${text.substring(matchPos, matchPos + lowerQuery.length)}</span>`;
       // 更新位置
       lastIndex = matchPos + lowerQuery.length;
     }
@@ -359,7 +369,7 @@ function highlightMatchingText(text, query) {
   // 创建高亮包装函数
   const wrapWithHighlight = (match) => {
     hasMatch = true;
-    return `<span class="bg-yellow-200 px-0.5 py-0.5 rounded">${match}</span>`;
+    return `<span class="highlight">${match}</span>`;
   };
   
   // 对每个词语进行检查
@@ -406,10 +416,10 @@ function highlightMatchingText(text, query) {
         // 从后往前替换，避免位置偏移
         for (let i = matchPositions.length - 1; i >= 0; i--) {
           const pos = matchPositions[i];
-          highlightedText = 
-            highlightedText.substring(0, pos) +
-            `<span class="bg-yellow-200 px-0.5 py-0.5 rounded">${text[pos]}</span>` +
-            highlightedText.substring(pos + 1);
+              highlightedText =
+                highlightedText.substring(0, pos) +
+                `<span class="highlight">${text[pos]}</span>` +
+                highlightedText.substring(pos + 1);
         }
       }
     }
@@ -422,31 +432,30 @@ function highlightMatchingText(text, query) {
 function scrollToAddress(address, elements) {
   // 切换回编辑器页面
   showEditorPage(elements);
-  
-  // 使用setTimeout确保页面完全切换后再执行后续操作
-  setTimeout(() => {
-    // 在编辑器中查找并定位到地址
-    const content = elements.memoEditor.value;
-    
-    // 改进的地址查找逻辑：使用正则表达式确保找到的是完整的地址行
-    const addressRegex = new RegExp('(^|\n\n)' + address.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-    let match = addressRegex.exec(content);
-    
-    // 如果没有找到精确匹配，尝试更宽松的匹配
-    if (!match) {
-      const looseRegex = new RegExp(address.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
-      match = looseRegex.exec(content);
-    }
-    
-    if (match) {
-      // 获取地址的起始位置（考虑到可能捕获的换行符）
-      const addressIndex = match.index + (match[1] ? match[1].length : 0);
-      
-      // 设置光标位置到地址开头
-      elements.memoEditor.focus();
-      elements.memoEditor.setSelectionRange(addressIndex, addressIndex);
-      
-      // 使用更精确的方法来计算滚动位置
+
+  // 在编辑器中查找并定位到地址（同步执行，保持用户手势上下文）
+  const content = elements.memoEditor.value;
+
+  // 改进的地址查找逻辑：使用正则表达式确保找到的是完整的地址行
+  const addressRegex = new RegExp('(^|\n\n)' + address.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+  let match = addressRegex.exec(content);
+
+  // 如果没有找到精确匹配，尝试更宽松的匹配
+  if (!match) {
+    const looseRegex = new RegExp(address.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+    match = looseRegex.exec(content);
+  }
+
+  if (match) {
+    // 获取地址的起始位置（考虑到可能捕获的换行符）
+    const addressIndex = match.index + (match[1] ? match[1].length : 0);
+
+    // 设置光标位置到地址开头（同步，以唤起iOS键盘）
+    elements.memoEditor.focus();
+    elements.memoEditor.setSelectionRange(addressIndex, addressIndex);
+
+    // 计算滚动位置并微调放入渲染帧，避免阻塞手势
+    const doScrollAdjust = () => {
       // 创建一个临时的div来测量文本高度
       const tempDiv = document.createElement('div');
       tempDiv.style.position = 'absolute';
@@ -458,28 +467,24 @@ function scrollToAddress(address, elements) {
       tempDiv.style.whiteSpace = 'pre-wrap';
       tempDiv.textContent = content.substring(0, addressIndex);
       document.body.appendChild(tempDiv);
-      
-      // 获取实际文本高度
+
       const scrollHeight = tempDiv.offsetHeight;
       document.body.removeChild(tempDiv);
-      
-      // 设置滚动位置，将地址放在视图的1/4处
+
       const targetScrollTop = Math.max(0, scrollHeight - (elements.memoEditor.clientHeight / 4));
       elements.memoEditor.scrollTop = targetScrollTop;
-      
-      // 使用requestAnimationFrame确保浏览器渲染完成后再进行微调
+
       requestAnimationFrame(() => {
-        // 再次微调，确保地址在正确位置
         elements.memoEditor.scrollTop = targetScrollTop;
-        
-        // 对于很长的内容，添加额外的调整确保定位准确
         requestAnimationFrame(() => {
-          // 确保光标可见
           elements.memoEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
       });
-    }
-  }, 150); // 稍微增加延迟，确保页面完全切换
+    };
+
+    // 使用rAF而非定时器，避免丢失手势上下文
+    requestAnimationFrame(doScrollAdjust);
+  }
 }
 
 // 清空搜索输入
@@ -538,10 +543,7 @@ function handleSearchInput(elements) {
 // 处理搜索框焦点事件
 function handleSearchFocus(elements) {
   const query = elements.searchInput.value.trim().toLowerCase();
-  // 激活时显示顶部占位
-  if (elements.searchResultsTopSpacer) {
-    elements.searchResultsTopSpacer.classList.remove('hidden');
-  }
+  updateTopSpacerVisibility(elements);
   // 清除可能存在的隐藏计时器，避免刚获得焦点就被隐藏
   if (appData.searchSpacerTimer) {
     clearTimeout(appData.searchSpacerTimer);
@@ -557,17 +559,23 @@ function handleSearchFocus(elements) {
   }
 }
 
-// 处理搜索框失焦事件：延迟1秒隐藏顶部占位，避免点击结果项跳转中断
+// 处理搜索框失焦事件：延迟600毫秒隐藏顶部占位，避免点击结果项跳转中断
 function handleSearchBlur(elements) {
-  if (elements.searchResultsTopSpacer) {
-    if (appData.searchSpacerTimer) {
-      clearTimeout(appData.searchSpacerTimer);
-    }
-    appData.searchSpacerTimer = setTimeout(() => {
-      elements.searchResultsTopSpacer.classList.add('hidden');
-      appData.searchSpacerTimer = null;
-    }, 1000);
+  if (appData.searchSpacerTimer) {
+    clearTimeout(appData.searchSpacerTimer);
   }
+  const hasQuery = (
+    elements.searchInput && elements.searchInput.value.trim().length > 0
+  ) || (appData.searchQuery && appData.searchQuery.length > 0);
+  if (!hasQuery) {
+    appData.searchSpacerTimer = null;
+    updateTopSpacerVisibility(elements);
+    return;
+  }
+  appData.searchSpacerTimer = setTimeout(() => {
+    appData.searchSpacerTimer = null;
+    updateTopSpacerVisibility(elements);
+  }, 600);
 }
 
 

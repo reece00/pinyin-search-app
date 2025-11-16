@@ -1,6 +1,5 @@
 // 导入各模块
 import { appData, loadDataFromLocalStorage, saveDataToLocalStorage, saveCurrentFile, bindEditorToFile } from './app-data.js';
-import { runWebDavSync } from './sync-webdav.js';
 import { 
   toggleFilePopup, closeFilePopup, handleDeleteFile, 
   handleNewFile, createNewFile, openFile, 
@@ -19,6 +18,11 @@ import {
 
 // 全局DOM元素引用
 let elements = {};
+let layoutCache = {
+  mainPadTop: 0,
+  mainPadBottom: 0
+};
+let viewportRafPending = false;
 
 // 处理编辑器输入
 function handleEditorInput() {
@@ -41,28 +45,47 @@ function handleEditorInput() {
 
 // 动态计算主编辑框高度（排除底部工具栏与文件名栏）
 function adjustEditorHeight() {
-  const editorEl = elements.memoEditor;
   const mainEl = elements.appMain || document.querySelector('main');
+  if (!mainEl) return;
+  if (!layoutCache.mainPadTop && !layoutCache.mainPadBottom) {
+    const mainStyle = getComputedStyle(mainEl);
+    layoutCache.mainPadTop = parseFloat(mainStyle.paddingTop) || 0;
+    layoutCache.mainPadBottom = parseFloat(mainStyle.paddingBottom) || 0;
+    document.documentElement.style.setProperty('--main-pad-top', `${layoutCache.mainPadTop}px`);
+    document.documentElement.style.setProperty('--main-pad-bottom', `${layoutCache.mainPadBottom}px`);
+  }
+}
+
+function updateVisualViewportVar() {
+  if (viewportRafPending) return;
+  viewportRafPending = true;
+  requestAnimationFrame(() => {
+    viewportRafPending = false;
+    const vh = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--visual-vh', `${Math.floor(vh)}px`);
+  });
+}
+
+function setupLayoutObservers() {
   const footerEl = elements.appFooter || document.querySelector('footer');
   const filenameBarEl = elements.filenameBar || document.getElementById('filename-bar');
+  if (!footerEl || !filenameBarEl) return;
 
-  if (!editorEl || !mainEl || !footerEl || !filenameBarEl) {
-    return;
-  }
+  const roFooter = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const h = Math.round(entry.contentRect.height);
+      document.documentElement.style.setProperty('--footer-h', `${h}px`);
+    }
+  });
+  roFooter.observe(footerEl);
 
-  const viewportHeight = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
-  const footerH = footerEl.offsetHeight || 0;
-  const fileBarH = filenameBarEl.offsetHeight || 0;
-
-  const mainStyle = getComputedStyle(mainEl);
-  const mainPadTop = parseFloat(mainStyle.paddingTop) || 0;
-  const mainPadBottom = parseFloat(mainStyle.paddingBottom) || 0;
-
-  const desiredHeight = viewportHeight - footerH - fileBarH - mainPadTop - mainPadBottom;
-  const minHeight = 200;
-  const heightPx = Math.max(minHeight, Math.floor(desiredHeight));
-
-  editorEl.style.height = `${heightPx}px`;
+  const roFileBar = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const h = Math.round(entry.contentRect.height);
+      document.documentElement.style.setProperty('--filebar-h', `${h}px`);
+    }
+  });
+  roFileBar.observe(filenameBarEl);
 }
 
   // 绑定所有事件
@@ -110,8 +133,37 @@ function adjustEditorHeight() {
   }
   if (elements.menuSyncBtn && elements.secondaryMenu) {
     elements.menuSyncBtn.addEventListener('click', () => {
-      runWebDavSync();
+      import('./sync-webdav.js').then(({ runWebDavSync }) => {
+        runWebDavSync();
+      }).catch((e) => {
+        console.error('加载同步模块失败', e);
+      });
       elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+  if (elements.menuLoadFontBtn && elements.secondaryMenu) {
+    elements.menuLoadFontBtn.addEventListener('click', async () => {
+      try {
+        showToast('正在加载自定义字体...', elements);
+        if (!document.body.classList.contains('no-custom-font')) {
+          elements.menuLoadFontBtn.disabled = true;
+          elements.menuLoadFontBtn.textContent = '已加载';
+          elements.secondaryMenu.classList.add('hidden');
+          return;
+        }
+        if (!document.fonts.check('1em 汉字拼音体')) {
+          await document.fonts.load('1em 汉字拼音体');
+        }
+        document.body.classList.remove('no-custom-font');
+        elements.menuLoadFontBtn.disabled = true;
+        elements.menuLoadFontBtn.textContent = '已加载';
+        showToast('自定义字体已加载', elements);
+      } catch (e) {
+        console.error('加载自定义字体失败', e);
+        showToast('加载自定义字体失败', elements);
+      } finally {
+        elements.secondaryMenu.classList.add('hidden');
+      }
     });
   }
   elements.searchInput.addEventListener('input', () => handleSearchInput(elements));
@@ -121,6 +173,17 @@ function adjustEditorHeight() {
   // 顶部搜索框已移除，无需绑定其输入事件
   // 顶部搜索框已移除，清空按钮逻辑不再绑定
   elements.memoEditor.addEventListener('input', handleEditorInput);
+  // 编辑器焦点时启用底部填充，避免键盘遮挡；失焦时关闭
+  elements.memoEditor.addEventListener('focus', () => {
+    if (elements.appMain) {
+      elements.appMain.classList.add('keyboard-avoidance-active');
+    }
+  });
+  elements.memoEditor.addEventListener('blur', () => {
+    if (elements.appMain) {
+      elements.appMain.classList.remove('keyboard-avoidance-active');
+    }
+  });
   elements.closeSearchResultsButton.addEventListener('click', () => clearSearchInput(elements));
   
   // 阻止点击弹窗内元素时关闭弹窗
@@ -151,6 +214,7 @@ function initApp() {
     menuPasteBtn: document.getElementById('menu-paste-btn'),
     menuRenameResetBtn: document.getElementById('menu-rename-reset-btn'),
     menuSyncBtn: document.getElementById('menu-sync-btn'),
+    menuLoadFontBtn: document.getElementById('menu-load-font-btn'),
     searchInput: document.getElementById('search-input'),
     clearInputBtn: document.getElementById('clear-input-btn'),
     toastMessage: document.getElementById('toast'),
@@ -187,19 +251,20 @@ function initApp() {
   // 绑定事件
   bindEvents();
 
-  // 初始计算编辑器高度
-  adjustEditorHeight();
+  setupLayoutObservers();
 
-  // 视口变化时重新计算（适配移动端键盘、旋转等）
-  window.addEventListener('resize', adjustEditorHeight);
+  // 初始化并监听视觉视口变化
+  updateVisualViewportVar();
+  window.addEventListener('resize', updateVisualViewportVar);
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', adjustEditorHeight);
+    window.visualViewport.addEventListener('resize', updateVisualViewportVar);
   }
+
+  // 初始化主容器内边距变量
+  adjustEditorHeight();
   
   // 适配iOS布局
   updateLayoutForIOS(elements);
-  // 布局更新后再计算一次高度，确保安全区与工具栏生效
-  adjustEditorHeight();
   
   // 阻止橡皮筋效果
   preventRubberBandEffect();

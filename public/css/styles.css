@@ -1,9 +1,16 @@
-/* 自定义字体导入 */
+/* 自定义字体导入（统一为WOFF2并启用swap策略） */
 @font-face {
   font-family: '汉字拼音体';
-  src: url('./汉字拼音体.ttf') format('truetype');
+  src: url('../汉字拼音体.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
+}
+
+/* 初始禁用自定义字体，使用系统默认无衬线字体；点击“加载字体”后移除 no-custom-font 类即可启用 */
+.no-custom-font.font-sans,
+.no-custom-font .font-sans {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
 }
 
 /* Tailwind 配置 - 实际使用时应放入tailwind.config.js */
@@ -40,6 +47,12 @@ html, body {
   --safe-area-inset-top: env(safe-area-inset-top);
   --safe-area-inset-bottom: env(safe-area-inset-bottom);
   --available-height: 100vh;
+  /* 视觉视口与布局变量，JS 初始化与监听更新 */
+  --visual-vh: 100vh;
+  --footer-h: 0px;
+  --filebar-h: 0px;
+  --main-pad-top: 0px;
+  --main-pad-bottom: 0px;
 }
 
 /* 全局防止iOS橡皮筋效果，但保留编辑器滚动功能 */
@@ -56,6 +69,8 @@ html, body {
 #memo-editor {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* 采用视觉视口适配的高度计算，避免频繁JS测量 */
+  height: calc(var(--visual-vh) - var(--footer-h) - var(--filebar-h) - var(--main-pad-top) - var(--main-pad-bottom));
 }
 
 /* 搜索结果关闭按钮样式 */
@@ -67,15 +82,16 @@ html, body {
 }
 
 #close-search-results {
-  width: 3rem;  /* 48px */
-  height: 3rem; /* 48px */
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 0.5rem 0.75rem;
   border-radius: 9999px;
   background: white;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.2s ease-in-out;
+  font-size: 0.875rem;
+  color: #6B7280;
 }
 
 #close-search-results:hover {
@@ -83,9 +99,7 @@ html, body {
   transform: scale(1.05);
 }
 
-#close-search-results i {
-  font-size: 1.25rem; /* 20px */
-}
+/* 纯文字关闭按钮无需图标样式 */
 
 /* 检测并设置安全区域 */
 @supports (padding: env(safe-area-inset-top)) {
@@ -95,7 +109,7 @@ html, body {
   }
 }
 
-/* 搜索结果列表 */
+/* 搜索结果列表（自适应高度） */
 #search-results-list {
   flex: 1;
   overflow-y: auto;
@@ -106,8 +120,6 @@ html, body {
   padding: 8px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   position: relative;
-  height: 200px;
-  max-height: 200px;
 }
 
 #search-results-page {
@@ -194,10 +206,12 @@ input[type="text"]:focus {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 顶部安全区域适配 */
-.safe-area-top {
-  padding-top: constant(safe-area-inset-top);
-  padding-top: env(safe-area-inset-top);
+/* 顶部安全区域适配（未使用，已移除） */
+
+/* iOS 底部安全区填充：供 JS 动态添加 */
+.ios-bottom-padding {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* iOS设备媒体查询 */
@@ -250,13 +264,13 @@ input[type="text"]:focus {
     z-index: 100;
   }
   
-  /* 确保输入框不会被键盘遮挡 */
-  .keyboard-avoidance {
+  /* 确保输入框不会被键盘遮挡（仅编辑器焦点时启用） */
+  .keyboard-avoidance.keyboard-avoidance-active {
     padding-bottom: 150px; /* 增加底部内边距 */
   }
   
   /* 优化弹窗位置 */
-  #file-popup, #confirm-popup {
+  #file-popup {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }

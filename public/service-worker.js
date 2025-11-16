@@ -1,23 +1,21 @@
 // 缓存版本标识
 // AI提示：CACHE_VERSION不需要手动修改，发布流程会自动更新
-const CACHE_VERSION = 'v1.3.0';
+const CACHE_VERSION = 'v1.3.2';
 const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 
 // 需要缓存的资源列表
 const STATIC_ASSETS = [
   '.',
   './index.html',
-  './test.html',
   './manifest.json',
-  './styles.css',
-  './app.js',
-  './app-data.js',
-  './file-management.js',
-  './search-functionality.js',
-  './ui-utils.js',
-  './sync-webdav.js',
-  './server.js',
-  './汉字拼音体.ttf'
+  './css/tailwind.css',
+  './css/styles.css',
+  './js/app.js',
+  './js/app-data.js',
+  './js/file-management.js',
+  './js/search-functionality.js',
+  './js/ui-utils.js',
+  './pinyin-pro.js'
 ];
 
 // 安装事件 - 缓存静态资源

@@ -7,8 +7,8 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open index.html",
-            "file": "${workspaceFolder}/index.html"
+            "name": "Open public/index.html",
+            "file": "${workspaceFolder}/public/index.html"
         },
         {
             "type": "node",
@@ -17,6 +17,13 @@
             "program": "${workspaceFolder}/server.js",
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal"
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Open http://localhost:8080",
+            "url": "http://localhost:8080/",
+            "webRoot": "${workspaceFolder}/public"
         }
     ]
 }

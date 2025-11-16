@@ -16,50 +16,14 @@
   <!-- manifest.json -->
   <link rel="manifest" href="manifest.json">
   
-  <!-- 自定义字体导入 -->
-  <style>
-    @font-face {
-      font-family: '汉字拼音体';
-      src: url('./汉字拼音体.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-    }
-  </style>
+  <!-- 自定义字体导入统一到 styles.css -->
   
   <title>地址首字母搜索备忘录</title>
-  <!-- Tailwind CSS v3 (开发环境CDN，生产环境请使用PostCSS插件或Tailwind CLI) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome -->
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <!-- pinyin-pro 拼音转换库 -->
-  <script src="https://unpkg.com/pinyin-pro@3.18.2/dist/index.js"></script>
+  <link rel="stylesheet" href="css/tailwind.css">
+  <!-- pinyin-pro 拼音转换库按需加载（移除同步引入以优化首屏） -->
   
-  <!-- Tailwind 配置 -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#007AFF',
-            secondary: '#6B7280',
-            accent: '#FF9500',
-            light: '#F9FAFB',
-            dark: '#1F2937'
-          },
-          fontFamily: {
-            sans: ['汉字拼音体', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
-          },
-          boxShadow: {
-            'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-            'popup': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-          }
-        }
-      }
-    }
-  </script>
-  
-  <!-- 引入外部样式文件 -->
-  <link rel="stylesheet" href="styles.css">
+  <!-- 引入外部样式文件（在 Tailwind 之后，确保自定义样式覆盖） -->
+  <link rel="stylesheet" href="css/styles.css">
   
   <style>
     /* 增加交互元素间距 */
@@ -68,7 +32,7 @@
     }
   </style>
 </head>
-<body class="bg-gray-50 font-sans text-dark min-h-screen flex flex-col">
+<body class="bg-gray-50 no-custom-font font-sans text-dark min-h-screen flex flex-col">
   
   <!-- 主要内容区域 -->
   <main class="flex-grow p-4 keyboard-avoidance">
@@ -78,15 +42,15 @@
       <div id="filename-bar" class="p-2 bg-gray-50 border-b border-gray-200">
         <div id="filename-display" class="text-sm text-gray-700 truncate text-center">新备忘录1</div>
       </div>
-      <textarea id="memo-editor" class="w-full h-full p-4 bg-white rounded-lg shadow-sm border border-gray-200 focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none resize-none" placeholder="请输入地址和备注，格式如下：
-地址1
-备注1
-备注2
-
-地址2
-备注1
-
-（地址和备注之间用空行分隔，地址放在第一行，备注放在后续行）"></textarea>
+      <textarea id="memo-editor" class="w-full h-full p-4 bg-white rounded-lg shadow-sm border border-gray-200 focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none resize-none" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="请输入地址和备注，格式如下：
+        地址1
+        备注1
+        备注2
+        
+        地址2
+        备注1
+        
+        （地址和备注之间用空行分隔，地址放在第一行，备注放在后续行）"></textarea>
     </div>
     
     <!-- 搜索结果页面 (初始隐藏) -->
@@ -107,16 +71,13 @@
         
         <!-- 未找到结果提示 -->
         <div id="no-results-message" class="hidden text-center py-10">
-          <i class="fa fa-search text-4xl text-gray-300 mb-3"></i>
           <p class="text-gray-500">未找到匹配的地址</p>
         </div>
       </div>
       
       <!-- 关闭按钮放在右下角 -->
       <div id="search-results-close-container" class="hidden">
-        <button id="close-search-results" class="text-secondary">
-          <i class="fa fa-times"></i>
-        </button>
+        <button id="close-search-results" class="text-secondary">关闭</button>
       </div>
     </div>
     
@@ -140,9 +101,7 @@
           autocorrect="off"
           spellcheck="false"
         >
-        <button id="clear-input-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hidden ios-button">
-          <i class="fa fa-times-circle"></i>
-        </button>
+        <button id="clear-input-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hidden ios-button px-3 py-1 bg-gray-100 rounded-full">清空</button>
       </div>
       
       <!-- 按钮容器 - 将在搜索页面隐藏 -->
@@ -150,35 +109,20 @@
         <!-- 操作按钮 -->
         <div class="flex justify-between items-center">
           <div class="flex space-x-4">
-            <button id="file-switch-btn" class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">
-              <i class="fa fa-folder-o text-lg"></i>
-            </button>
-            <button id="new-file-btn" class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">
-              <i class="fa fa-plus text-lg"></i>
-            </button>
-            <button id="rename-file-btn" class="flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">
-              <i class="fa fa-pencil text-lg"></i>
-            </button>
+            <button id="file-switch-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">文件</button>
+            <button id="new-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">新建</button>
+            <button id="rename-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">重命名</button>
 
           </div>
           
           <div class="relative">
-            <button id="secondary-menu-btn" class="bg-primary text-white px-6 py-3 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center ios-button">
-              <i class="fa fa-bars mr-2"></i> 更多
-            </button>
+            <button id="secondary-menu-btn" class="bg-primary text-white px-6 py-3 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center ios-button">更多</button>
             <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white shadow-lg rounded-lg p-2 w-40 z-20">
-              <button id="menu-save-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">
-                <i class="fa fa-save mr-2"></i> 保存
-              </button>
-              <button id="menu-paste-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">
-                <i class="fa fa-paste mr-2"></i> 粘贴
-              </button>
-              <button id="menu-rename-reset-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">
-                <i class="fa fa-refresh mr-2"></i> 重置文件名
-              </button>
-              <button id="menu-sync-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">
-                <i class="fa fa-refresh mr-2"></i> 同步
-              </button>
+              <button id="menu-save-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">保存</button>
+              <button id="menu-paste-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">粘贴</button>
+              <button id="menu-rename-reset-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">重置文件名</button>
+              <button id="menu-sync-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">同步</button>
+              <button id="menu-load-font-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">加载字体</button>
             </div>
           </div>
         </div>
@@ -208,9 +152,7 @@
     <div class="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col">
       <div class="p-4 border-b flex justify-between items-center">
         <h3 class="text-lg font-medium" id="edit-title">编辑地址</h3>
-        <button id="close-edit-popup" class="text-secondary hover:text-dark">
-          <i class="fa fa-times"></i>
-        </button>
+        <button id="close-edit-popup" class="text-secondary hover:text-dark">关闭</button>
       </div>
       <div class="p-4 flex-grow overflow-auto">
         <textarea id="edit-content" class="w-full h-48 p-3 border rounded-lg text-sm resize-none" placeholder="请输入地址和备注，地址请放在第一行，备注放在后续行"></textarea>
@@ -234,11 +176,11 @@
   </div>
 
   <!-- 引入模块化JavaScript文件 -->
-  <script type="module" src="app-data.js"></script>
-  <script type="module" src="file-management.js"></script>
-  <script type="module" src="search-functionality.js"></script>
-  <script type="module" src="ui-utils.js"></script>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="js/app-data.js"></script>
+  <script type="module" src="js/file-management.js"></script>
+  <script type="module" src="js/search-functionality.js"></script>
+  <script type="module" src="js/ui-utils.js"></script>
+  <script type="module" src="js/app.js"></script>
   
   <!-- 初始化应用 -->
   <script>

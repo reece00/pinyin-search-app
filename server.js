@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname);
+const publicRoot = path.join(root, 'public');
 const port = 8080;
 
 const types = {
@@ -11,6 +12,7 @@ const types = {
   '.js': 'application/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.ttf': 'font/ttf',
+  '.woff2': 'font/woff2',
   '.ico': 'image/x-icon',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
@@ -32,7 +34,7 @@ function safeJoin(base, target) {
 
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent(req.url.split('?')[0]);
-  const filePath = urlPath === '/' ? path.join(root, 'index.html') : safeJoin(root, urlPath.slice(1));
+  const filePath = urlPath === '/' ? path.join(publicRoot, 'index.html') : safeJoin(publicRoot, urlPath.slice(1));
   if (!filePath) return send(res, 403, 'Forbidden', { 'Content-Type': 'text/plain' });
 
   fs.stat(filePath, (err, stat) => {

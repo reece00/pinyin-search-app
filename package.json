@@ -1,0 +1,13 @@
+{
+  "name": "pinyin-search-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i ./tailwind-input.css -o ./public/css/tailwind.css --minify --content \"./public/index.html\" \"./public/js/**/*.js\"",
+    "dev:css": "tailwindcss -i ./tailwind-input.css -o ./tailwind.css --content \"./index.html\" \"./*.js\" --watch",
+    "build": "npm run build:css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.18"
+  }
+}

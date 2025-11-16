@@ -60,8 +60,6 @@ function doOpenFile(filename, elements) {
   // 显示当前文件名
   elements.filenameDisplay.textContent = filename;
   
-  // 保存数据
-  saveDataToLocalStorage();
   
   // 清除搜索
   clearSearchInput(elements);
@@ -403,3 +401,4 @@ export {
   renderFileList,
   handleImportClipboard
 };
+ 
