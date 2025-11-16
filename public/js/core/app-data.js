@@ -1,4 +1,3 @@
-// 全局数据存储
 const appData = {
   files: {}, // 存储所有文件 { filename: { content: '...', lastModified: timestamp } }
   currentFile: null, // 当前打开的文件名
@@ -10,7 +9,6 @@ const appData = {
   searchSpacerTimer: null // 搜索框失焦后隐藏占位的延迟计时器
 };
 
-// 从本地存储加载数据
 function loadDataFromLocalStorage() {
   const savedData = localStorage.getItem('addressBookData');
   if (savedData) {
@@ -18,12 +16,10 @@ function loadDataFromLocalStorage() {
   }
 }
 
-// 保存数据到本地存储
 function saveDataToLocalStorage() {
   localStorage.setItem('addressBookData', JSON.stringify(appData.files));
 }
 
-// 保存当前文件
 function saveCurrentFile(elements) {
   if (!appData.currentFile || !appData.isModified) return;
   
@@ -35,7 +31,6 @@ function saveCurrentFile(elements) {
   appData.isModified = false;
 }
 
-// 绑定编辑器内容到当前文件
 function bindEditorToFile(content, elements) {
   if (elements && elements.memoEditor) {
     elements.memoEditor.value = content || '';
@@ -43,7 +38,6 @@ function bindEditorToFile(content, elements) {
   }
 }
 
-// 导出模块
 export {
   appData,
   loadDataFromLocalStorage,

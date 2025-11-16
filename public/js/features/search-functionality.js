@@ -1,6 +1,6 @@
-import { appData } from './app-data.js';
+import { appData } from '../core/app-data.js';
 import { openFile } from './file-management.js';
-import { showToast } from './ui-utils.js';
+import { showToast } from '../ui/ui-utils.js';
 
 let pinyinProLoadPromise = null;
 let firstSearchScheduled = false;
@@ -14,7 +14,7 @@ function loadPinyinPro() {
   if (pinyinProLoadPromise) return pinyinProLoadPromise;
   pinyinProLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    script.src = './pinyin-pro.js';
+    script.src = '/pinyin-pro.js';
     script.async = true;
     script.onload = () => resolve(globalThis.pinyinPro);
     script.onerror = () => reject(new Error('pinyin-pro load error'));

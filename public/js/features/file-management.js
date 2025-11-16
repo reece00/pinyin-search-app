@@ -1,6 +1,6 @@
-import { appData, saveDataToLocalStorage, bindEditorToFile } from './app-data.js';
+import { appData, saveDataToLocalStorage, bindEditorToFile } from '../core/app-data.js';
 import { clearSearchInput } from './search-functionality.js';
-import { showToast } from './ui-utils.js';
+import { showToast } from '../ui/ui-utils.js';
 
 // 创建新文件
 function createNewFile(elements) {

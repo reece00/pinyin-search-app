@@ -11,10 +11,10 @@ const STATIC_ASSETS = [
   './css/tailwind.css',
   './css/styles.css',
   './js/app.js',
-  './js/app-data.js',
-  './js/file-management.js',
-  './js/search-functionality.js',
-  './js/ui-utils.js',
+  './js/core/app-data.js',
+  './js/features/file-management.js',
+  './js/features/search-functionality.js',
+  './js/ui/ui-utils.js',
   './pinyin-pro.js'
 ];
 

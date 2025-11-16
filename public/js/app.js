@@ -1,20 +1,20 @@
 // 导入各模块
-import { appData, loadDataFromLocalStorage, saveDataToLocalStorage, saveCurrentFile, bindEditorToFile } from './app-data.js';
+import { appData, loadDataFromLocalStorage, saveDataToLocalStorage, saveCurrentFile, bindEditorToFile } from './core/app-data.js';
 import { 
   toggleFilePopup, closeFilePopup, handleDeleteFile, 
   handleNewFile, createNewFile, openFile, 
   handleRenameFile, handleResetFilename, handleImportClipboard,
   renderFileList 
-} from './file-management.js';
+} from './features/file-management.js';
 import { 
   performSearch, showSearchResultsPage, showEditorPage,
   handleSearchInput, handleSearchFocus, handleSearchBlur,
   clearSearchInput, scrollToAddress
-} from './search-functionality.js';
+} from './features/search-functionality.js';
 import { 
   showToast, updateLayoutForIOS, preventRubberBandEffect,
   showAutoSaveIndicator, setupOutsideClickHandler, initPWA
-} from './ui-utils.js';
+} from './ui/ui-utils.js';
 
 // 全局DOM元素引用
 let elements = {};
@@ -226,7 +226,7 @@ function setupEditorSwipe() {
   }
   if (elements.menuSyncBtn && elements.secondaryMenu) {
     elements.menuSyncBtn.addEventListener('click', () => {
-      import('./sync-webdav.js').then(({ runWebDavSync }) => {
+      import('/js/sync/webdav.js').then(({ runWebDavSync }) => {
         runWebDavSync();
       }).catch((e) => {
         console.error('加载同步模块失败', e);
