@@ -66,7 +66,7 @@ export default [
     }
   },
   {
-    files: ['server.js'],
+    files: ['scripts/server.js'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'script',

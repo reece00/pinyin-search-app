@@ -22,3 +22,5 @@ test-results/
 Desktop.ini
 .idea/
 .eslintcache
+public/css/tailwind.css
+public/**/*.map

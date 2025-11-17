@@ -4,15 +4,17 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:css": "tailwindcss -i ./tailwind-input.css -o ./public/css/tailwind.css --minify --content \"./public/index.html\" \"./public/js/**/*.js\"",
-    "dev:css": "tailwindcss -i ./tailwind-input.css -o ./public/css/tailwind.css --content \"./public/index.html\" \"./public/js/**/*.js\" --watch",
+    "build:css": "tailwindcss -c ./config/tailwind.config.js -i ./config/tailwind-input.css -o ./public/css/tailwind.css --minify --content \"./public/index.html\" \"./public/js/**/*.js\"",
+    "dev:css": "tailwindcss -c ./config/tailwind.config.js -i ./config/tailwind-input.css -o ./public/css/tailwind.css --content \"./public/index.html\" \"./public/js/**/*.js\" --watch",
     "build": "npm run build:css",
-    "lint": "eslint \"public/**/*.js\"",
-    "lint:fix": "eslint \"public/**/*.js\" --fix",
-    "stylelint": "stylelint \"tailwind-input.css\"",
-    "stylelint:fix": "stylelint \"tailwind-input.css\" --fix",
+    "lint": "eslint \"public/**/*.js\" -c ./config/eslint.config.js",
+    "lint:fix": "eslint \"public/**/*.js\" --fix -c ./config/eslint.config.js",
+    "stylelint": "stylelint \"config/tailwind-input.css\" --config ./config/.stylelintrc.json",
+    "stylelint:fix": "stylelint \"config/tailwind-input.css\" --fix --config ./config/.stylelintrc.json",
     "test:e2e": "playwright test",
-    "test:e2e:report": "playwright show-report"
+    
+    "test:pwa": "set RUN_PWA=1&& playwright test tests/pwa.spec.ts",
+    "test:pwa:json": "set RUN_PWA=1&& playwright test tests/pwa.spec.ts --reporter=json > reports/pwa.json"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",

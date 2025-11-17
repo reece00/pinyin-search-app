@@ -15,7 +15,6 @@ export default defineConfig({
     trace: 'retain-on-failure'
   },
   reporter: [
-    ['html', { open: 'never' }],
     ['json', { outputFile: 'reports/e2e.json' }]
   ],
   webServer: {
