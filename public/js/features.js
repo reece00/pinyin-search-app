@@ -218,7 +218,7 @@ function loadPinyinPro() {
   if (pinyinProLoadPromise) return pinyinProLoadPromise
   pinyinProLoadPromise = new Promise((resolve, reject) => {
     const script = document.createElement('script')
-    script.src = '/js/pinyin-pro.js'
+    script.src = 'js/pinyin-pro.js'
     script.async = true
     script.onload = () => resolve(globalThis.pinyinPro)
     script.onerror = () => reject(new Error('pinyin-pro load error'))

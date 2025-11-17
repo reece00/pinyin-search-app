@@ -12,6 +12,7 @@
     "stylelint": "stylelint \"config/tailwind-input.css\" --config ./config/.stylelintrc.json",
     "stylelint:fix": "stylelint \"config/tailwind-input.css\" --fix --config ./config/.stylelintrc.json",
     "test:e2e": "playwright test",
+    "test:e2e:fast": "set PW_FAST=1&& playwright test",
     
     "test:pwa": "set RUN_PWA=1&& playwright test tests/pwa.spec.ts",
     "test:pwa:json": "set RUN_PWA=1&& playwright test tests/pwa.spec.ts --reporter=json > reports/pwa.json"

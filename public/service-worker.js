@@ -106,7 +106,7 @@ self.addEventListener('fetch', /** @param {FetchEvent} event */ (event) => {
           .catch(() => {
             // 网络请求失败且是HTML请求，返回缓存的离线页面或首页
             if (event.request.headers.get('accept')?.includes('text/html')) {
-              return caches.match('.');
+              return caches.match('./index.html');
             }
             // 其他资源请求失败返回一个基本的响应，而不是undefined
             return new Response('Network error happened', {

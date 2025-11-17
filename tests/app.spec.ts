@@ -1,4 +1,12 @@
+// 测试模式说明：
+// - 标准模式：不设置 PW_FAST；真实加载拼音库，保留失败时的 trace 与截图，等待时间较长，适合完整回归。
+// - 快速模式：设置环境变量 PW_FAST=1；注入轻量 pinyinPro stub，缩短超时与固定等待，加速本地迭代。
+// - 运行命令：
+//   * 标准：npm run test:e2e
+//   * 快速：npm run test:e2e:fast
 import { test, expect } from '@playwright/test'
+
+const isFast = !!process.env.PW_FAST
 import { hookConsole, hookRequestFailed, attachEvidence } from './helpers/test-evidence'
 
 const testData = {
@@ -20,6 +28,27 @@ let consoleLogs: { type: string; text: string }[]
 let netFailedLogs: { url: string; failureText: string }[]
 
 test.beforeEach(async ({ page }) => {
+  // 预置拼音库 stub（加速模式）
+  await page.addInitScript(({ fast }) => {
+    if (fast) {
+      // 提供轻量 pinyinPro 接口，满足测试断言
+      (window as any).pinyinPro = {
+        pinyin: (text: string, opts: any) => {
+          const map: Record<string, string> = {
+            '广': 'g', '州': 'z', '市': 's',
+            '上': 's', '海': 'h',
+            '北': 'b', '京': 'j',
+            '天': 't', '河': 'h', '区': 'q',
+            '朝': 'c', '阳': 'y',
+            '浦': 'p', '东': 'd', '宁': 'n'
+          }
+          const arr = Array.from(text || '').map(ch => map[ch] || '')
+          if (opts && opts.type === 'array') return arr
+          return arr.join('')
+        }
+      }
+    }
+  }, { fast: isFast })
   await page.addInitScript(({ data }) => {
     // 预置本地数据，确保搜索有命中且可进行文件切换
     localStorage.setItem('addressBookData', JSON.stringify(data))
@@ -48,8 +77,8 @@ test('初始化页面状态', async ({ page }) => {
 test('拼音首字母搜索（有结果）', async ({ page }) => {
   const input = page.locator('#search-input')
   await input.fill('gzs')
-  await page.waitForFunction(() => (window as any).pinyinPro && typeof (window as any).pinyinPro.pinyin === 'function', { timeout: 10000 })
-  await page.waitForFunction(() => document.querySelectorAll('#search-results-list > div').length > 0, { timeout: 5000 })
+  await page.waitForFunction(() => (window as any).pinyinPro && typeof (window as any).pinyinPro.pinyin === 'function', { timeout: isFast ? 2000 : 10000 })
+  await page.waitForFunction(() => document.querySelectorAll('#search-results-list > div').length > 0, { timeout: isFast ? 2500 : 5000 })
   await expect(page.locator('#search-results-page')).toBeVisible()
   await expect(page.locator('#results-count')).toContainText('已找到')
   await page.locator('#clear-input-btn').click()
@@ -59,7 +88,7 @@ test('拼音首字母搜索（有结果）', async ({ page }) => {
 test('拼音首字母搜索（无结果）', async ({ page }) => {
   const input = page.locator('#search-input')
   await input.fill('zzz')
-  await page.waitForFunction(() => (window as any).pinyinPro && typeof (window as any).pinyinPro.pinyin === 'function', { timeout: 10000 })
+  await page.waitForFunction(() => (window as any).pinyinPro && typeof (window as any).pinyinPro.pinyin === 'function', { timeout: isFast ? 2000 : 10000 })
   await expect(page.locator('#search-results-page')).toBeVisible()
   await expect(page.locator('#results-count')).toHaveText('已找到0项')
   const listItems = await page.locator('#search-results-list > div').count()
@@ -72,7 +101,7 @@ test('搜索→结果页→关闭返回编辑页', async ({ page }) => {
   const input = page.locator('#search-input')
   await input.fill('北京')
   // 输入防抖 300ms + 渲染时间
-  await page.waitForTimeout(700)
+  await page.waitForTimeout(isFast ? 300 : 700)
   await expect(page.locator('#search-results-page')).toBeVisible()
   const countText = await page.locator('#results-count').textContent()
   expect(countText || '').toMatch(/已找到\d+项/)
@@ -89,9 +118,9 @@ test('点击搜索结果跳转到对应文件并定位', async ({ page }) => {
   const input = page.locator('#search-input')
   await input.fill('gzs')
   // 先触发拼音库按需加载，再等待库就绪
-  await page.waitForFunction(() => (window as any).pinyinPro && typeof (window as any).pinyinPro.pinyin === 'function', { timeout: 10000 })
+  await page.waitForFunction(() => (window as any).pinyinPro && typeof (window as any).pinyinPro.pinyin === 'function', { timeout: isFast ? 2000 : 10000 })
   // 等待列表渲染稳定（至少一项）
-  await page.waitForFunction(() => document.querySelectorAll('#search-results-list > div').length > 0, { timeout: 5000 })
+  await page.waitForFunction(() => document.querySelectorAll('#search-results-list > div').length > 0, { timeout: isFast ? 2500 : 5000 })
   const firstItem = page.locator('#search-results-list > div').first()
   await firstItem.click()
   await expect(page.locator('#filename-display')).toHaveText('测试文件B')

@@ -230,7 +230,7 @@ function setupEditorSwipe() {
   }
   if (elements.menuSyncBtn && elements.secondaryMenu) {
     elements.menuSyncBtn.addEventListener('click', () => {
-      import('/js/webdav.js').then(({ runWebDavSync }) => { // 按需加载同步模块（根路径）
+      import('./webdav.js').then(({ runWebDavSync }) => { // 按需加载同步模块（模块相对路径，兼容子目录部署）
         runWebDavSync();
       }).catch((e) => {
         console.error('加载同步模块失败', e);
@@ -370,7 +370,7 @@ function initApp() {
   // 初始化 PWA 注册与安装提示
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/service-worker.js')
+      navigator.serviceWorker.register('service-worker.js')
         .then(registration => { console.log('Service Worker 注册成功:', registration.scope); })
         .catch(error => { console.log('Service Worker 注册失败:', error); });
       navigator.serviceWorker.addEventListener('controllerchange', () => { window.location.reload(); });
