@@ -24,6 +24,8 @@
   
   <!-- 引入外部样式文件（在 Tailwind 之后，确保自定义样式覆盖） -->
   <link rel="stylesheet" href="css/styles.css">
+  <!-- 空图标占位，避免浏览器请求 /favicon.ico 报错 -->
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y2bYp0AAAAASUVORK5CYII=">
   
   <style>
     /* 增加交互元素间距 */
@@ -126,6 +128,7 @@
               <button id="menu-rename-reset-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">重置文件名</button>
               <button id="menu-sync-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">同步</button>
               <button id="menu-load-font-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">加载字体</button>
+              <button id="menu-log-panel-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">日志面板</button>
             </div>
           </div>
         </div>

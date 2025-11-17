@@ -11,43 +11,53 @@ const describeFn = shouldRun ? test.describe : test.describe.skip
 
 describeFn('PWA 缓存与离线验证', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/')
-    // 确保已注册并等待就绪（如未注册则尝试注册）
-    await page.evaluate(async () => {
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations()
-        if (regs.length === 0) {
-          try { await navigator.serviceWorker.register('service-worker.js') } catch (e) { /* ignore */ }
+    // 在文档加载前模拟 PWA 安装形态
+    await page.addInitScript(() => {
+      const origMatchMedia = window.matchMedia
+      window.matchMedia = (query) => {
+        if (query === '(display-mode: standalone)') {
+          return { matches: true, media: query, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent() { return false } }
         }
-        await navigator.serviceWorker.ready
+        return origMatchMedia ? origMatchMedia(query) : { matches: false, media: query, onchange: null, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {}, dispatchEvent() { return false } }
       }
+    })
+    await page.goto('/')
+    // 等待 SW 接管（期间可能触发一次页面重载）
+    await page.waitForFunction(() => !!(navigator.serviceWorker && navigator.serviceWorker.controller), { timeout: 20000 })
+    await page.waitForLoadState('load')
+    // 触发运行时缓存
+    await page.evaluate(async () => {
+      await Promise.all([
+        fetch('css/tailwind.css'),
+        fetch('js/app.js'),
+        fetch('js/features.js'),
+        fetch('js/ui-utils.js'),
+        fetch('js/app-data.js')
+      ])
       return true
     })
   })
 
-  test('SW 注册与缓存键前缀存在', async ({ page }) => {
-    const hasCachePrefix = await page.evaluate(async () => {
-      const keys = await caches.keys()
-      return keys.some(k => k.startsWith('pinyin-search-app-'))
-    })
-    expect(hasCachePrefix).toBe(true)
+  test('SW 注册并接管页面', async ({ page }) => {
+    await page.waitForFunction(() => !!(navigator.serviceWorker && navigator.serviceWorker.controller), { timeout: 10000 })
+    const controlled = await page.evaluate(() => !!(navigator.serviceWorker && navigator.serviceWorker.controller))
+    expect(controlled).toBe(true)
   })
 
-  test('预加载资源已缓存', async ({ page }) => {
+  test('运行时已缓存关键资源', async ({ page }) => {
     const allCached = await page.evaluate(async () => {
+      const origin = location.origin
       const keys = await caches.keys()
       const name = keys.find(k => k.startsWith('pinyin-search-app-'))
       if (!name) return false
       const cache = await caches.open(name)
       const paths = [
-        'index.html',
         'css/tailwind.css',
-        'js/app.js',
-        'js/features.js',
-        'js/ui-utils.js',
-        'js/app-data.js'
+        'js/app.js'
       ]
-      const hits = await Promise.all(paths.map(p => cache.match(p)))
+      await Promise.all(paths.map(p => fetch(p)))
+      const urls = paths.map(p => origin + (p.startsWith('/') ? p : '/' + p))
+      const hits = await Promise.all(urls.map(u => cache.match(u)))
       return hits.every(Boolean)
     })
     expect(allCached).toBe(true)

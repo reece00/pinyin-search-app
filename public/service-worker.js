@@ -5,36 +5,9 @@ const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 // 在部分 IDE 中，`self` 会被当作 `Window` 类型。通过 `unknown` 中转再断言为 ServiceWorker 作用域。
 const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 
-// 需要缓存的资源列表
-const STATIC_ASSETS = [
-  '.',
-  './index.html',
-  './manifest.json',
-  './css/tailwind.css',
-  './css/styles.css',
-  './js/app.js',
-  './js/app-data.js',
-  './js/features.js',
-  './js/ui-utils.js',
-  './js/pinyin-pro.js'
-];
-
-// 安装事件 - 缓存静态资源
+// 安装事件 - 取消预加载，仅跳过等待
 self.addEventListener('install', /** @param {ExtendableEvent} event */ (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('打开缓存');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        // 跳过等待，直接激活
-        return sw.skipWaiting();
-      })
-      .catch((error) => {
-        console.error('缓存静态资源失败:', error);
-      })
-  );
+  event.waitUntil(sw.skipWaiting());
 });
 
 // 激活事件 - 清理旧缓存

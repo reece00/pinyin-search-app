@@ -2,7 +2,7 @@
 import { appData, loadDataFromLocalStorage, saveCurrentFile } from './app-data.js';
 import { files, search } from './features.js';
 import { 
-  showToast, preventRubberBandEffect
+  showToast, preventRubberBandEffect, initErrorMonitor, openClientLogOverlay
 } from './ui-utils.js';
 
 // 全局DOM元素引用
@@ -238,29 +238,20 @@ function setupEditorSwipe() {
       elements.secondaryMenu.classList.add('hidden');
     });
   }
+  if (elements.menuLogPanelBtn && elements.secondaryMenu) {
+    elements.menuLogPanelBtn.addEventListener('click', () => {
+      openClientLogOverlay();
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
   if (elements.menuLoadFontBtn && elements.secondaryMenu) {
-    elements.menuLoadFontBtn.addEventListener('click', async () => {
-      try {
-        showToast('正在加载自定义字体...', elements);
-        if (!document.body.classList.contains('no-custom-font')) {
-          elements.menuLoadFontBtn.disabled = true;
-          elements.menuLoadFontBtn.textContent = '已加载';
-          elements.secondaryMenu.classList.add('hidden');
-          return;
-        }
-        if (!document.fonts.check('1em 汉字拼音体')) {
-          await document.fonts.load('1em 汉字拼音体');
-        }
+    elements.menuLoadFontBtn.addEventListener('click', () => {
+      if (document.body.classList.contains('no-custom-font')) {
         document.body.classList.remove('no-custom-font');
         elements.menuLoadFontBtn.disabled = true;
         elements.menuLoadFontBtn.textContent = '已加载';
-        showToast('自定义字体已加载', elements);
-      } catch (e) {
-        console.error('加载自定义字体失败', e);
-        showToast('加载自定义字体失败', elements);
-      } finally {
-        elements.secondaryMenu.classList.add('hidden');
       }
+      elements.secondaryMenu.classList.add('hidden');
     });
   }
   elements.searchInput.addEventListener('input', () => search.handleSearchInput(elements));
@@ -291,6 +282,13 @@ function setupEditorSwipe() {
 
 // 初始化应用
 function initApp() {
+  const host = location.hostname || '';
+  const isLan = (
+    host === 'localhost' || host === '127.0.0.1' || host === '::1' ||
+    /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
+    host.endsWith('.local')
+  );
+  initErrorMonitor({ endpoint: './__client-logs', overlay: true, levels: ['error','warn','log','info','debug'], disableSend: !isLan, trigger: 'menu' });
   console.log('正在初始化应用...');
   
   // 获取DOM元素引用
@@ -314,6 +312,7 @@ function initApp() {
     menuPasteBtn: document.getElementById('menu-paste-btn'),
     menuRenameResetBtn: document.getElementById('menu-rename-reset-btn'),
     menuSyncBtn: document.getElementById('menu-sync-btn'),
+    menuLogPanelBtn: document.getElementById('menu-log-panel-btn'),
     menuLoadFontBtn: document.getElementById('menu-load-font-btn'),
     searchInput: document.getElementById('search-input'),
     clearInputBtn: document.getElementById('clear-input-btn'),
@@ -367,19 +366,37 @@ function initApp() {
   // 阻止橡皮筋效果
   preventRubberBandEffect();
   
-  // 初始化 PWA 注册与安装提示
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
+  // 初始化 PWA 注册与安装提示（仅在 PWA 安装形态注册 SW）
+  const isPWAInstalled = (() => {
+    const isStandalone = typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches;
+    const isIOSStandalone = typeof navigator !== 'undefined' && /** @type {any} */(navigator).standalone === true;
+    return !!(isStandalone || isIOSStandalone);
+  })();
+
+  const isSecure = typeof window !== 'undefined' && !!window.isSecureContext;
+  if (isPWAInstalled && 'serviceWorker' in navigator && isSecure) {
+    const registerSW = () => {
       navigator.serviceWorker.register('service-worker.js')
         .then(registration => { console.log('Service Worker 注册成功:', registration.scope); })
         .catch(error => { console.log('Service Worker 注册失败:', error); });
-      navigator.serviceWorker.addEventListener('controllerchange', () => { window.location.reload(); });
+
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        console.log('Service Worker 已接管页面（PWA）');
+      });
+
       navigator.serviceWorker.ready.then(() => {
         if (navigator.serviceWorker.controller) {
+          console.log('Service Worker 已就绪（PWA）');
           navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
         }
       });
-    });
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      registerSW()
+    } else {
+      window.addEventListener('load', registerSW)
+    }
   }
   
   console.log('应用初始化完成');
