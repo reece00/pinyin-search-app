@@ -16,3 +16,9 @@ pnpm-debug.log*
 *.local
 .vercel/
 .vscode/
+playwright-report/
+reports/
+test-results/
+Desktop.ini
+.idea/
+.eslintcache

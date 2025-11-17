@@ -1,0 +1,9 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "plugins": ["stylelint-no-unsupported-browser-features"],
+  "ignoreFiles": ["public/css/**", "tailwind.css"],
+  "rules": {
+    "plugin/no-unsupported-browser-features": [true, { "severity": "warning", "ignorePartialSupport": true }],
+    "at-rule-no-unknown": [true, { "ignoreAtRules": ["tailwind", "apply", "variants", "responsive", "screen"] }]
+  }
+}

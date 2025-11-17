@@ -1,20 +1,9 @@
 // 导入各模块
-import { appData, loadDataFromLocalStorage, saveDataToLocalStorage, saveCurrentFile, bindEditorToFile } from './core/app-data.js';
+import { appData, loadDataFromLocalStorage, saveCurrentFile } from './app-data.js';
+import { files, search } from './features.js';
 import { 
-  toggleFilePopup, closeFilePopup, handleDeleteFile, 
-  handleNewFile, createNewFile, openFile, 
-  handleRenameFile, handleResetFilename, handleImportClipboard,
-  renderFileList 
-} from './features/file-management.js';
-import { 
-  performSearch, showSearchResultsPage, showEditorPage,
-  handleSearchInput, handleSearchFocus, handleSearchBlur,
-  clearSearchInput, scrollToAddress
-} from './features/search-functionality.js';
-import { 
-  showToast, updateLayoutForIOS, preventRubberBandEffect,
-  showAutoSaveIndicator, setupOutsideClickHandler, initPWA
-} from './ui/ui-utils.js';
+  showToast, preventRubberBandEffect
+} from './ui-utils.js';
 
 // 全局DOM元素引用
 let elements = {};
@@ -32,11 +21,23 @@ function handleEditorInput() {
     if (appData.autoSaveTimer) {
       clearTimeout(appData.autoSaveTimer);
     }
-    
-    appData.autoSaveTimer = setTimeout(() => {
-      saveCurrentFile(elements);
-      showAutoSaveIndicator(elements);
-    }, 1000); // 1秒后自动保存
+  
+  appData.autoSaveTimer = setTimeout(() => {
+    saveCurrentFile(elements);
+      if (elements && elements.autoSaveIndicator) {
+        const indicator = elements.autoSaveIndicator;
+        indicator.classList.remove('hidden');
+        indicator.classList.remove('opacity-0');
+        indicator.classList.add('opacity-100');
+        setTimeout(() => {
+          indicator.classList.remove('opacity-100');
+          indicator.classList.add('opacity-0');
+          setTimeout(() => {
+            indicator.classList.add('hidden');
+          }, 300);
+        }, 1000);
+      }
+  }, 1000); // 1秒后自动保存
   }
   
   // 记录编辑器状态
@@ -93,28 +94,28 @@ function getFileOrder() {
 }
 
 function switchToPrevFile() {
-  const files = getFileOrder();
-  if (files.length <= 1) {
+  const fileNames = getFileOrder();
+  if (fileNames.length <= 1) {
     showToast('只有一个文件', elements);
     return;
   }
-  const idx = files.indexOf(appData.currentFile);
+  const idx = fileNames.indexOf(appData.currentFile);
   if (idx > 0) {
-    openFile(files[idx - 1], elements);
+    files.openFile(fileNames[idx - 1], elements);
   } else {
     showToast('已是第一个文件', elements);
   }
 }
 
 function switchToNextFile() {
-  const files = getFileOrder();
-  if (files.length <= 1) {
+  const fileNames = getFileOrder();
+  if (fileNames.length <= 1) {
     showToast('只有一个文件', elements);
     return;
   }
-  const idx = files.indexOf(appData.currentFile);
-  if (idx >= 0 && idx < files.length - 1) {
-    openFile(files[idx + 1], elements);
+  const idx = fileNames.indexOf(appData.currentFile);
+  if (idx >= 0 && idx < fileNames.length - 1) {
+    files.openFile(fileNames[idx + 1], elements);
   } else {
     showToast('已是最后一个文件', elements);
   }
@@ -165,9 +166,9 @@ function setupEditorSwipe() {
   // 绑定所有事件
   function bindEvents() {
     // 文件操作事件
-    elements.fileButton.addEventListener('click', () => toggleFilePopup(elements));
-    elements.closeFilePopup.addEventListener('click', () => closeFilePopup(elements));
-    elements.renameFileButton.addEventListener('click', () => handleRenameFile(elements));
+    elements.fileButton.addEventListener('click', () => files.toggleFilePopup(elements));
+    elements.closeFilePopup.addEventListener('click', () => files.closeFilePopup(elements));
+    elements.renameFileButton.addEventListener('click', () => files.handleRenameFile(elements));
   if (elements.prevFileButton) {
     elements.prevFileButton.addEventListener('click', () => switchToPrevFile());
   }
@@ -182,8 +183,11 @@ function setupEditorSwipe() {
       if (!elements.secondaryMenu.classList.contains('hidden')) {
         // 延迟绑定外部点击关闭，避免本次点击被捕获
         setTimeout(() => {
-          setupOutsideClickHandler(elements.secondaryMenu, () => {
-            elements.secondaryMenu.classList.add('hidden');
+          document.addEventListener('click', function handleOutsideClick(event) {
+            if (elements.secondaryMenu && !elements.secondaryMenu.contains(event.target)) {
+              elements.secondaryMenu.classList.add('hidden');
+              document.removeEventListener('click', handleOutsideClick);
+            }
           });
         }, 0);
       }
@@ -200,33 +204,33 @@ function setupEditorSwipe() {
   }
   if (elements.menuNewFileBtn && elements.secondaryMenu) {
     elements.menuNewFileBtn.addEventListener('click', () => {
-      handleNewFile(elements);
+      files.handleNewFile(elements);
       elements.secondaryMenu.classList.add('hidden');
     });
   }
   if (elements.menuDeleteBtn && elements.secondaryMenu) {
     elements.menuDeleteBtn.addEventListener('click', () => {
       if (appData.currentFile) {
-        handleDeleteFile(appData.currentFile, elements);
+        files.handleDeleteFile(appData.currentFile, elements);
       }
       elements.secondaryMenu.classList.add('hidden');
     });
   }
   if (elements.menuPasteBtn && elements.secondaryMenu) {
     elements.menuPasteBtn.addEventListener('click', () => {
-      handleImportClipboard(elements);
+      files.handleImportClipboard(elements);
       elements.secondaryMenu.classList.add('hidden');
     });
   }
   if (elements.menuRenameResetBtn && elements.secondaryMenu) {
     elements.menuRenameResetBtn.addEventListener('click', () => {
-      handleResetFilename(elements);
+      files.handleResetFilename(elements);
       elements.secondaryMenu.classList.add('hidden');
     });
   }
   if (elements.menuSyncBtn && elements.secondaryMenu) {
     elements.menuSyncBtn.addEventListener('click', () => {
-      import('/js/sync/webdav.js').then(({ runWebDavSync }) => {
+      import('/js/webdav.js').then(({ runWebDavSync }) => { // 按需加载同步模块（根路径）
         runWebDavSync();
       }).catch((e) => {
         console.error('加载同步模块失败', e);
@@ -259,25 +263,24 @@ function setupEditorSwipe() {
       }
     });
   }
-  elements.searchInput.addEventListener('input', () => handleSearchInput(elements));
-  elements.searchInput.addEventListener('focus', () => handleSearchFocus(elements));
-  elements.searchInput.addEventListener('blur', () => handleSearchBlur(elements));
-  elements.clearInputBtn.addEventListener('click', () => clearSearchInput(elements));
-  // 顶部搜索框已移除，无需绑定其输入事件
-  // 顶部搜索框已移除，清空按钮逻辑不再绑定
+  elements.searchInput.addEventListener('input', () => search.handleSearchInput(elements));
+  elements.searchInput.addEventListener('focus', () => search.handleSearchFocus(elements));
+  elements.searchInput.addEventListener('blur', () => search.handleSearchBlur(elements));
+  elements.clearInputBtn.addEventListener('click', () => search.clearSearchInput(elements));
+  
   elements.memoEditor.addEventListener('input', handleEditorInput);
   // 编辑器焦点时启用底部填充，避免键盘遮挡；失焦时关闭
   elements.memoEditor.addEventListener('focus', () => {
     if (elements.appMain) {
-      elements.appMain.classList.add('keyboard-avoidance-active');
+      elements.appMain.classList.add('keyboard-avoidance-active'); // 键盘避让类开关（iOS）
     }
   });
   elements.memoEditor.addEventListener('blur', () => {
     if (elements.appMain) {
-      elements.appMain.classList.remove('keyboard-avoidance-active');
+      elements.appMain.classList.remove('keyboard-avoidance-active'); // 键盘避让类开关（iOS）
     }
   });
-  elements.closeSearchResultsButton.addEventListener('click', () => clearSearchInput(elements));
+  elements.closeSearchResultsButton.addEventListener('click', () => search.clearSearchInput(elements));
   
   // 阻止点击弹窗内元素时关闭弹窗
   elements.filePopup.addEventListener('click', (e) => e.stopPropagation());
@@ -326,23 +329,23 @@ function initApp() {
     autoSaveIndicator: document.getElementById('auto-save-indicator'),
     actionButtonsContainer: document.getElementById('action-buttons-container'),
     filenameDisplay: document.getElementById('filename-display'),
-    memoEditor: document.getElementById('memo-editor')
+    
   };
   
   // 加载数据
   loadDataFromLocalStorage();
   
   // 渲染文件列表
-  renderFileList(elements);
+  files.renderFileList(elements);
   
   // 打开最后编辑的文件；如果没有则打开第一个文件；如果没有任何文件则新建
   const fileKeys = Object.keys(appData.files);
   if (appData.currentFile && appData.files[appData.currentFile]) {
-    openFile(appData.currentFile, elements);
+    files.openFile(appData.currentFile, elements);
   } else if (fileKeys.length > 0) {
-    openFile(fileKeys[0], elements);
+    files.openFile(fileKeys[0], elements);
   } else {
-    createNewFile(elements);
+    files.createNewFile(elements);
   }
   
   // 绑定事件
@@ -361,19 +364,29 @@ function initApp() {
   adjustEditorHeight();
   
   // 适配iOS布局
-  updateLayoutForIOS(elements);
-  
   // 阻止橡皮筋效果
   preventRubberBandEffect();
   
-  // 初始化PWA
-  initPWA();
+  // 初始化 PWA 注册与安装提示
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => { console.log('Service Worker 注册成功:', registration.scope); })
+        .catch(error => { console.log('Service Worker 注册失败:', error); });
+      navigator.serviceWorker.addEventListener('controllerchange', () => { window.location.reload(); });
+      navigator.serviceWorker.ready.then(() => {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
+        }
+      });
+    });
+  }
   
   console.log('应用初始化完成');
 }
 
-// 导出初始化函数
-window.initApp = initApp;
+// 导出初始化函数（通过全局对象挂载，规避类型检查限制）
+globalThis['initApp'] = initApp;
 
 // 导出全局引用以便调试
 export { elements, appData };

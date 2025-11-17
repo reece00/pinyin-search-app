@@ -1,7 +1,9 @@
+/// <reference lib="webworker" />
 // 缓存版本标识
-// AI提示：CACHE_VERSION不需要手动修改，发布流程会自动更新
-const CACHE_VERSION = 'v1.3.2';
+const CACHE_VERSION = 'v1.3.5';
 const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
+// 在部分 IDE 中，`self` 会被当作 `Window` 类型。通过 `unknown` 中转再断言为 ServiceWorker 作用域。
+const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 
 // 需要缓存的资源列表
 const STATIC_ASSETS = [
@@ -11,15 +13,14 @@ const STATIC_ASSETS = [
   './css/tailwind.css',
   './css/styles.css',
   './js/app.js',
-  './js/core/app-data.js',
-  './js/features/file-management.js',
-  './js/features/search-functionality.js',
-  './js/ui/ui-utils.js',
-  './pinyin-pro.js'
+  './js/app-data.js',
+  './js/features.js',
+  './js/ui-utils.js',
+  './js/pinyin-pro.js'
 ];
 
 // 安装事件 - 缓存静态资源
-self.addEventListener('install', (event) => {
+self.addEventListener('install', /** @param {ExtendableEvent} event */ (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -28,7 +29,7 @@ self.addEventListener('install', (event) => {
       })
       .then(() => {
         // 跳过等待，直接激活
-        return self.skipWaiting();
+        return sw.skipWaiting();
       })
       .catch((error) => {
         console.error('缓存静态资源失败:', error);
@@ -37,7 +38,7 @@ self.addEventListener('install', (event) => {
 });
 
 // 激活事件 - 清理旧缓存
-self.addEventListener('activate', (event) => {
+self.addEventListener('activate', /** @param {ExtendableEvent} event */ (event) => {
   const cacheWhitelist = [CACHE_NAME];
   
   event.waitUntil(
@@ -58,13 +59,13 @@ self.addEventListener('activate', (event) => {
       })
       .then(() => {
         // 立即接管所有客户端
-        return self.clients.claim();
+        return sw.clients.claim();
       })
   );
 });
 
 // 资源请求事件 - 实现缓存优先策略
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', /** @param {FetchEvent} event */ (event) => {
   // 忽略非GET请求和chrome扩展请求
   if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
     return;
@@ -117,15 +118,13 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// 注意：已移除后台同步功能，因为当前项目不需要离线数据同步功能
 
-// 注意：已移除推送通知相关功能，因为当前项目不需要推送功能
 
 // 后台消息事件
-self.addEventListener('message', (event) => {
+self.addEventListener('message', /** @param {ExtendableMessageEvent} event */ (event) => {
   // 处理来自客户端的消息
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  if (event.data && event.data.type === 'SKIP_WAITING') { // 版本切换消息约定
+    sw.skipWaiting();
   }
   
   // 可以在这里添加更多消息类型的处理逻辑

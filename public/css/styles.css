@@ -63,7 +63,6 @@ html, body {
   height: 100%;
 }
 
-/* （已移除）全局禁用拼写检查相关样式 */
 
 /* 确保编辑器可以滚动 */
 #memo-editor {
@@ -111,7 +110,8 @@ html, body {
 
 /* 搜索结果列表（自适应高度） */
 #search-results-list {
-  flex: 1;
+  flex: 1 1 auto;
+  max-height: none;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background-color: #f5f5f5;
@@ -133,10 +133,7 @@ html, body {
 }
 
 
-#search-results-list {
-  flex: 1 1 auto;
-  max-height: none;
-}
+/* 合并至上方定义 */
 
 /* 减少搜索结果项之间的间距 */
 #search-results-list > div {
@@ -206,13 +203,9 @@ input[type="text"]:focus {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 顶部安全区域适配（未使用，已移除） */
 
 /* iOS 底部安全区填充：供 JS 动态添加 */
-.ios-bottom-padding {
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
-}
+/* 与 .safe-area-bottom 合并，避免重复语义 */
 
 /* iOS设备媒体查询 */
 @media screen and (max-width: 768px) {
@@ -265,9 +258,9 @@ input[type="text"]:focus {
   }
   
   /* 确保输入框不会被键盘遮挡（仅编辑器焦点时启用） */
-  .keyboard-avoidance.keyboard-avoidance-active {
-    padding-bottom: 150px; /* 增加底部内边距 */
-  }
+.keyboard-avoidance-active {
+  padding-bottom: 150px; /* 增加底部内边距 */
+}
   
   /* 优化弹窗位置 */
   #file-popup {

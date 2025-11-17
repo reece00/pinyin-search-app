@@ -1,10 +1,12 @@
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname);
 const publicRoot = path.join(root, 'public');
-const port = 8080;
+const port = process.env.PORT ? Number(process.env.PORT) : 8080;
 
 const types = {
   '.html': 'text/html; charset=utf-8',
