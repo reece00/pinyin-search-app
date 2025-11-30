@@ -344,8 +344,9 @@ function renderSearchResults(results, elements) {
     resultItem.addEventListener('click', () => {
       if (item.sourceFile) {
         openFile(item.sourceFile, elements)
-        showEditorPage(elements)
-        scrollToAddress(item.address, elements)
+         showEditorPage(elements)
+         elements.memoEditor.focus()
+         scrollToAddress(item.address, elements)
       }
     })
     elements.searchResultsList.appendChild(resultItem)
