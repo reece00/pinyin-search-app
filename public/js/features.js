@@ -342,8 +342,11 @@ function renderSearchResults(results, elements) {
     resultItem.appendChild(addressTitle)
     resultItem.appendChild(notesContent)
     resultItem.addEventListener('click', () => {
-      if (item.sourceFile) { openFile(item.sourceFile, elements) }
-      scrollToAddress(item.address, elements)
+      if (item.sourceFile) {
+        openFile(item.sourceFile, elements)
+        showEditorPage(elements)
+        scrollToAddress(item.address, elements)
+      }
     })
     elements.searchResultsList.appendChild(resultItem)
   })
@@ -405,22 +408,28 @@ function scrollToAddress(address, elements) {
   const content = appData.files[appData.currentFile]?.content || ''
   if (!content || !address) return
   const lines = content.split('\n')
-  const targetLines = []
+  let targetLine = -1
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
-    if (line && line.includes(address)) { targetLines.push(i) }
-  }
-  if (targetLines.length > 0 && elements.memoEditor) {
-    const scrollHeight = elements.memoEditor.scrollHeight
-    const doScrollAdjust = () => {
-      const targetScrollTop = Math.max(0, scrollHeight - (elements.memoEditor.clientHeight / 4))
-      elements.memoEditor.scrollTop = targetScrollTop
-      requestAnimationFrame(() => {
-        elements.memoEditor.scrollTop = targetScrollTop
-        requestAnimationFrame(() => { elements.memoEditor.scrollIntoView({ behavior: 'smooth', block: 'center' }) })
-      })
+    if (lines[i].includes(address)) {
+      targetLine = i
+      break
     }
-    requestAnimationFrame(doScrollAdjust)
+  }
+  if (targetLine !== -1 && elements.memoEditor) {
+    const totalLines = lines.length
+    const lineHeight = elements.memoEditor.scrollHeight / totalLines
+    const targetScrollTop = lineHeight * targetLine
+    elements.memoEditor.scrollTop = targetScrollTop
+    requestAnimationFrame(() => {
+      elements.memoEditor.scrollTop = targetScrollTop
+      elements.memoEditor.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      let charIndex = 0
+      for (let i = 0; i < targetLine; i++) {
+        charIndex += lines[i].length + 1
+      }
+      elements.memoEditor.selectionStart = elements.memoEditor.selectionEnd = charIndex
+      elements.memoEditor.focus()
+    })
   }
 }
 

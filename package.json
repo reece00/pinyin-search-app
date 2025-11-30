@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node scripts/server.js",
     "build:css": "tailwindcss -c ./config/tailwind.config.js -i ./config/tailwind-input.css -o ./public/css/tailwind.css --minify --content \"./public/index.html\" \"./public/js/**/*.js\"",
     "dev:css": "tailwindcss -c ./config/tailwind.config.js -i ./config/tailwind-input.css -o ./public/css/tailwind.css --content \"./public/index.html\" \"./public/js/**/*.js\" --watch",
     "build": "npm run build:css",
@@ -13,7 +14,6 @@
     "stylelint:fix": "stylelint \"config/tailwind-input.css\" --fix --config ./config/.stylelintrc.json",
     "test:e2e": "playwright test",
     "test:e2e:fast": "set PW_FAST=1&& playwright test",
-    
     "test:pwa": "set RUN_PWA=1&& playwright test tests/pwa.spec.ts",
     "test:pwa:json": "set RUN_PWA=1&& playwright test tests/pwa.spec.ts --reporter=json > reports/pwa.json"
   },
@@ -21,6 +21,7 @@
     "@playwright/test": "^1.56.1",
     "eslint": "^9.39.1",
     "eslint-plugin-import": "^2.32.0",
+    "playwright": "^1.56.1",
     "stylelint": "^16.25.0",
     "stylelint-config-standard": "^39.0.1",
     "stylelint-no-unsupported-browser-features": "^8.0.5",
