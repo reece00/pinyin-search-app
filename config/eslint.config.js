@@ -26,7 +26,9 @@ export default [
         alert: 'readonly',
         confirm: 'readonly',
         URL: 'readonly',
-        Response: 'readonly'
+        Response: 'readonly',
+        location: 'readonly',
+        Blob: 'readonly'
       }
     },
     plugins: {

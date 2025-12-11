@@ -168,7 +168,17 @@ function setupEditorSwipe() {
     // 文件操作事件
     elements.fileButton.addEventListener('click', () => files.toggleFilePopup(elements));
     elements.closeFilePopup.addEventListener('click', () => files.closeFilePopup(elements));
-    elements.renameFileButton.addEventListener('click', () => files.handleRenameFile(elements));
+    // 快速滚动按钮
+    if (elements.scrollTopButton) {
+      elements.scrollTopButton.addEventListener('click', () => {
+        if (elements.memoEditor) { elements.memoEditor.scrollTop = 0; }
+      });
+    }
+    if (elements.scrollBottomButton) {
+      elements.scrollBottomButton.addEventListener('click', () => {
+        if (elements.memoEditor) { elements.memoEditor.scrollTop = elements.memoEditor.scrollHeight; }
+      });
+    }
   if (elements.prevFileButton) {
     elements.prevFileButton.addEventListener('click', () => switchToPrevFile());
   }
@@ -199,6 +209,12 @@ function setupEditorSwipe() {
     elements.menuSaveBtn.addEventListener('click', () => {
       saveCurrentFile(elements);
       showToast('已保存', elements);
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+  if (elements.menuRenameFileBtn && elements.secondaryMenu) {
+    elements.menuRenameFileBtn.addEventListener('click', () => {
+      files.handleRenameFile(elements);
       elements.secondaryMenu.classList.add('hidden');
     });
   }
@@ -303,9 +319,11 @@ function initApp() {
     fileList: document.getElementById('file-list'),
     prevFileButton: document.getElementById('prev-file-btn'),
     nextFileButton: document.getElementById('next-file-btn'),
-    renameFileButton: document.getElementById('rename-file-btn'),
+    scrollTopButton: document.getElementById('scroll-top-btn'),
+    scrollBottomButton: document.getElementById('scroll-bottom-btn'),
     secondaryMenuBtn: document.getElementById('secondary-menu-btn'),
     secondaryMenu: document.getElementById('secondary-menu'),
+    menuRenameFileBtn: document.getElementById('menu-rename-file-btn'),
     menuNewFileBtn: document.getElementById('menu-new-file-btn'),
     menuDeleteBtn: document.getElementById('menu-delete-btn'),
     menuSaveBtn: document.getElementById('menu-save-btn'),
