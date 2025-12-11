@@ -6,7 +6,8 @@ const appData = {
   autoSaveTimer: null,
   isModified: false,
   autoSaveEnabled: true,
-  searchSpacerTimer: null
+  searchSpacerTimer: null,
+  autoScrollOnOpen: true
 };
 
 function loadDataFromLocalStorage() {
@@ -14,10 +15,24 @@ function loadDataFromLocalStorage() {
   if (savedData) {
     appData.files = JSON.parse(savedData);
   }
+  const savedSettings = localStorage.getItem('addressBookSettings');
+  if (savedSettings) {
+    try {
+      const s = JSON.parse(savedSettings);
+      if (typeof s.autoScrollOnOpen === 'boolean') {
+        appData.autoScrollOnOpen = s.autoScrollOnOpen;
+      }
+    } catch (_) {}
+  }
 }
 
 function saveDataToLocalStorage() {
   localStorage.setItem('addressBookData', JSON.stringify(appData.files));
+}
+
+function saveSettingsToLocalStorage() {
+  const settings = { autoScrollOnOpen: appData.autoScrollOnOpen };
+  localStorage.setItem('addressBookSettings', JSON.stringify(settings));
 }
 
 function saveCurrentFile(elements) {
@@ -34,6 +49,7 @@ export {
   appData,
   loadDataFromLocalStorage,
   saveDataToLocalStorage,
+  saveSettingsToLocalStorage,
   saveCurrentFile,
   
 };

@@ -1,5 +1,5 @@
 // 导入各模块
-import { appData, loadDataFromLocalStorage, saveCurrentFile } from './app-data.js';
+import { appData, loadDataFromLocalStorage, saveCurrentFile, saveSettingsToLocalStorage } from './app-data.js';
 import { files, search } from './features.js';
 import { 
   showToast, preventRubberBandEffect, initErrorMonitor, openClientLogOverlay
@@ -212,6 +212,19 @@ function setupEditorSwipe() {
       elements.secondaryMenu.classList.add('hidden');
     });
   }
+  // 自动滚底部开关
+  if (elements.menuScrollOnOpenBtn && elements.secondaryMenu) {
+    const updateScrollOnOpenLabel = () => {
+      elements.menuScrollOnOpenBtn.textContent = `加载后滚底部：${appData.autoScrollOnOpen ? '开' : '关'}`;
+    };
+    updateScrollOnOpenLabel();
+    elements.menuScrollOnOpenBtn.addEventListener('click', () => {
+      appData.autoScrollOnOpen = !appData.autoScrollOnOpen;
+      saveSettingsToLocalStorage();
+      updateScrollOnOpenLabel();
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
   if (elements.menuRenameFileBtn && elements.secondaryMenu) {
     elements.menuRenameFileBtn.addEventListener('click', () => {
       files.handleRenameFile(elements);
@@ -323,6 +336,7 @@ function initApp() {
     scrollBottomButton: document.getElementById('scroll-bottom-btn'),
     secondaryMenuBtn: document.getElementById('secondary-menu-btn'),
     secondaryMenu: document.getElementById('secondary-menu'),
+    menuScrollOnOpenBtn: document.getElementById('menu-scroll-on-open-btn'),
     menuRenameFileBtn: document.getElementById('menu-rename-file-btn'),
     menuNewFileBtn: document.getElementById('menu-new-file-btn'),
     menuDeleteBtn: document.getElementById('menu-delete-btn'),

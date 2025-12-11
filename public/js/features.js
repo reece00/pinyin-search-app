@@ -27,6 +27,9 @@ function openFile(filename, elements) {
       appData.files[filename].lastModified = new Date().getTime()
       if (elements && elements.memoEditor) {
         elements.memoEditor.value = appData.files[filename].content || ''
+        if (appData.autoScrollOnOpen) {
+          requestAnimationFrame(() => { elements.memoEditor.scrollTop = elements.memoEditor.scrollHeight })
+        }
       }
       appData.currentFile = filename
       appData.isModified = false
@@ -38,6 +41,9 @@ function openFile(filename, elements) {
     appData.files[filename].lastModified = new Date().getTime()
     if (elements && elements.memoEditor) {
       elements.memoEditor.value = appData.files[filename].content || ''
+      if (appData.autoScrollOnOpen) {
+        requestAnimationFrame(() => { elements.memoEditor.scrollTop = elements.memoEditor.scrollHeight })
+      }
     }
     appData.currentFile = filename
     appData.isModified = false
