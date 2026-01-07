@@ -114,6 +114,8 @@ html, body {
   max-height: none;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  min-height: 0;
   background-color: #f5f5f5;
   border-radius: 8px;
   margin-top: 4px;
@@ -123,6 +125,15 @@ html, body {
 }
 
 #search-results-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(var(--visual-vh) - var(--footer-h) - var(--filebar-h) - var(--main-pad-top) - var(--main-pad-bottom));
+  overflow: hidden;
+}
+
+#search-results-page .relative {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }

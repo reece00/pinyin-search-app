@@ -532,11 +532,39 @@ export const files = {
       if (err.name === 'NotAllowedError') { showToast('需要权限才能访问剪贴板，请确保应用在安全环境中运行', elements) } else { showToast('读取剪切板失败，请重试或手动粘贴内容', elements) }
     })
   },
+  handleLoadExample: function(elements) {
+    showToast('正在加载示例数据...', elements)
+    fetch('示例数据.txt')
+      .then(response => {
+        if (!response.ok) { throw new Error('网络响应不正常') }
+        return response.text()
+      })
+      .then(text => {
+        if (!text.trim()) { showToast('示例数据为空', elements); return }
+        doImportExample(text, elements)
+      })
+      .catch(err => {
+        console.error('加载示例数据失败:', err)
+        showToast('加载示例数据失败', elements)
+      })
+  },
   renderFileList
 }
 
 function sanitizeFileName(name) {
   return name.replace(/[\\/:*?"<>|]/g, '').trim().substring(0, 50)
+}
+
+function doImportExample(text, elements) {
+  const timestamp = new Date().getTime()
+  let fileName = '示例数据'
+  let finalFileName = fileName
+  let counter = 1
+  while (appData.files[finalFileName]) { finalFileName = `${fileName}${counter}`; counter++ }
+  appData.files[finalFileName] = { content: text, lastModified: timestamp }
+  saveDataToLocalStorage()
+  openFile(finalFileName, elements)
+  showToast(`已加载示例文件: ${finalFileName}`, elements)
 }
 
 function doImportClipboard(text, elements) {

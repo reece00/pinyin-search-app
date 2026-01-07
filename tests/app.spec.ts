@@ -52,6 +52,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(({ data }) => {
     // 预置本地数据，确保搜索有命中且可进行文件切换
     localStorage.setItem('addressBookData', JSON.stringify(data))
+    localStorage.setItem('hasVisited', 'true')
   }, { data: testData })
   await page.goto('/')
   // 等待应用初始化完成（文件名从默认变为测试文件A，表明 initApp 已执行并绑定事件）
@@ -172,6 +173,23 @@ test('菜单展开与保存操作', async ({ page }) => {
   const obj = JSON.parse(stored!)
   const name = await page.locator('#filename-display').textContent()
   expect(obj[name!].content.includes('已修改备注')).toBeTruthy()
+})
+
+test('通过更多菜单加载示例数据', async ({ page }) => {
+  await page.locator('#secondary-menu-btn').click()
+  await expect(page.locator('#secondary-menu')).toBeVisible()
+  
+  await page.locator('#menu-load-example-btn').click()
+  
+  // 验证文件名包含“示例数据”
+  await expect(page.locator('#filename-display')).toHaveText(/示例数据/)
+  
+  // 验证编辑器内容（匹配真实文件内容）
+  await expect(page.locator('#memo-editor')).toHaveValue(/这里是一些示例数据/)
+  
+  // 验证 Toast
+  await expect(page.locator('#toast')).toBeVisible()
+  await expect(page.locator('#toast')).toContainText('已加载示例文件')
 })
 
 // 无需自定义断言

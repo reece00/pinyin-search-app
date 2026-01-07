@@ -41,36 +41,39 @@ function updateLayoutForIOS(elements) {
 
 function preventRubberBandEffect() {
   let startY;
+  const getScrollableAncestor = (target) => {
+    let el = target && target.nodeType === 1 ? target : null;
+    while (el && el !== document.body) {
+      const style = getComputedStyle(el);
+      const overflowY = style.overflowY;
+      const canScroll = (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') && el.scrollHeight > el.clientHeight;
+      if (canScroll) return el;
+      el = el.parentElement;
+    }
+    const docScrollEl = document.scrollingElement || document.body;
+    if (docScrollEl && docScrollEl.scrollHeight > docScrollEl.clientHeight) return docScrollEl;
+    return null;
+  };
   document.addEventListener('touchstart', (e) => {
     startY = e.touches[0].clientY;
   }, { passive: false });
   document.addEventListener('touchmove', (e) => {
-    let currentScrollElement;
-    const docScrollEl = document.scrollingElement || document.body;
-    if (docScrollEl.scrollTop > 0 || document.body.scrollTop > 0) {
-      currentScrollElement = docScrollEl;
-    } else {
-      const tgt = e.target;
-      if (tgt && tgt.nodeType === 1) {
-        currentScrollElement = tgt;
-        while (
-          currentScrollElement !== document.body &&
-          currentScrollElement && currentScrollElement.nodeType === 1 &&
-          !currentScrollElement.scrollTop
-        ) {
-          currentScrollElement = currentScrollElement.parentElement || document.body;
-        }
-      } else {
-        currentScrollElement = docScrollEl;
-      }
-    }
     const currentY = e.touches[0].clientY;
-    const scrollDirection = currentY > startY ? 'up' : 'down';
+    const deltaY = currentY - startY;
     startY = currentY;
-    if (
-      (currentScrollElement.scrollTop === 0 && scrollDirection === 'up') ||
-      (currentScrollElement.scrollHeight - currentScrollElement.scrollTop === currentScrollElement.clientHeight && scrollDirection === 'down')
-    ) {
+    const scrollEl = getScrollableAncestor(e.target);
+    if (!scrollEl) {
+      e.preventDefault();
+      return;
+    }
+    if (scrollEl.id === 'memo-editor' || scrollEl.id === 'search-results-list') {
+      return;
+    }
+    const atTop = scrollEl.scrollTop <= 0;
+    const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 1;
+    const pullingDown = deltaY > 0;
+    const pushingUp = deltaY < 0;
+    if ((atTop && pullingDown) || (atBottom && pushingUp)) {
       e.preventDefault();
     }
   }, { passive: false });

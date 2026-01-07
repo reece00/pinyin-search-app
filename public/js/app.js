@@ -283,6 +283,12 @@ function setupEditorSwipe() {
       elements.secondaryMenu.classList.add('hidden');
     });
   }
+  if (elements.menuLoadExampleBtn && elements.secondaryMenu) {
+    elements.menuLoadExampleBtn.addEventListener('click', () => {
+      files.handleLoadExample(elements);
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
   elements.searchInput.addEventListener('input', () => search.handleSearchInput(elements));
   elements.searchInput.addEventListener('focus', () => search.handleSearchFocus(elements));
   elements.searchInput.addEventListener('blur', () => search.handleSearchBlur(elements));
@@ -346,6 +352,7 @@ function initApp() {
     menuSyncBtn: document.getElementById('menu-sync-btn'),
     menuLogPanelBtn: document.getElementById('menu-log-panel-btn'),
     menuLoadFontBtn: document.getElementById('menu-load-font-btn'),
+    menuLoadExampleBtn: document.getElementById('menu-load-example-btn'),
     searchInput: document.getElementById('search-input'),
     clearInputBtn: document.getElementById('clear-input-btn'),
     toastMessage: document.getElementById('toast'),
@@ -397,6 +404,15 @@ function initApp() {
   // 适配iOS布局
   // 阻止橡皮筋效果
   preventRubberBandEffect();
+
+  // 首次访问自动加载示例数据
+  if (!localStorage.getItem('hasVisited')) {
+    localStorage.setItem('hasVisited', 'true');
+    // 延迟一点执行，确保界面已经就绪
+    setTimeout(() => {
+      files.handleLoadExample(elements);
+    }, 500);
+  }
   
   // 初始化 PWA 注册与安装提示（仅在 PWA 安装形态注册 SW）
   const isPWAInstalled = (() => {
