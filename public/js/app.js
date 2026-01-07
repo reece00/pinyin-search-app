@@ -383,7 +383,8 @@ function initApp() {
   } else if (fileKeys.length > 0) {
     files.openFile(fileKeys[0], elements);
   } else {
-    files.createNewFile(elements);
+    // 如果没有任何文件，则加载示例数据
+    files.handleLoadExample(elements);
   }
   
   // 绑定事件
@@ -404,15 +405,6 @@ function initApp() {
   // 适配iOS布局
   // 阻止橡皮筋效果
   preventRubberBandEffect();
-
-  // 首次访问自动加载示例数据
-  if (!localStorage.getItem('hasVisited')) {
-    localStorage.setItem('hasVisited', 'true');
-    // 延迟一点执行，确保界面已经就绪
-    setTimeout(() => {
-      files.handleLoadExample(elements);
-    }, 500);
-  }
   
   // 初始化 PWA 注册与安装提示（仅在 PWA 安装形态注册 SW）
   const isPWAInstalled = (() => {
