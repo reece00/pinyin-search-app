@@ -27,12 +27,7 @@
   <!-- 空图标占位，避免浏览器请求 /favicon.ico 报错 -->
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y2bYp0AAAAASUVORK5CYII=">
   
-  <style>
-    /* 增加交互元素间距 */
-    .flex.space-x-4 {
-      gap: 1rem;
-    }
-  </style>
+  <style></style>
 </head>
 <body class="bg-gray-50 no-custom-font font-sans text-dark min-h-screen flex flex-col">
   
@@ -109,8 +104,8 @@
       <!-- 按钮容器 - 将在搜索页面隐藏 -->
       <div id="action-buttons-container">
         <!-- 操作按钮 -->
-        <div class="flex justify-between items-center">
-          <div class="flex space-x-4">
+        <div class="flex items-center flex-wrap gap-2">
+          <div class="flex space-x-1 sm:space-x-2">
             <button id="file-switch-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">文件</button>
             <button id="prev-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">上一个</button>
             <button id="next-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors ios-button">下一个</button>
@@ -119,8 +114,8 @@
           
           </div>
           
-          <div class="relative">
-            <button id="secondary-menu-btn" class="bg-primary text-white px-6 py-3 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center ios-button">更多</button>
+          <div class="relative ml-auto">
+            <button id="secondary-menu-btn" class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center ios-button">更多</button>
             <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white shadow-lg rounded-lg p-2 w-40 z-20">
               <button id="menu-scroll-on-open-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">加载后滚底部：开</button>
               <button id="menu-rename-file-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">重命名</button>
