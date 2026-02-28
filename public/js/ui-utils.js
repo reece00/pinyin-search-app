@@ -154,7 +154,7 @@ function __normalizeArgs(args) {
       if (typeof a === 'object') return JSON.stringify(a);
       return String(a);
     }).join(' ');
-  } catch (e) {
+  } catch {
     return args.map(a => String(a)).join(' ');
   }
 }
@@ -183,8 +183,8 @@ function initErrorMonitor(options = {}) {
   const disableSend = !!options.disableSend;
   const trigger = options.trigger || 'menu';
   const origLog = console.log.bind(console);
-  const origInfo = console.info ? console.info.bind(console) : (...args) => {};
-  const origDebug = console.debug ? console.debug.bind(console) : (...args) => {};
+  const origInfo = console.info ? console.info.bind(console) : (..._args) => {};
+  const origDebug = console.debug ? console.debug.bind(console) : (..._args) => {};
   const origWarn = console.warn.bind(console);
   const origError = console.error.bind(console);
 
@@ -203,7 +203,7 @@ function initErrorMonitor(options = {}) {
       } else {
         fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: data, keepalive: true }).catch(() => {});
       }
-    } catch (_) {}
+    } catch {}
   }
 
   function wrap(methodName, level, orig) {
@@ -336,7 +336,7 @@ function openClientLogOverlay() {
     try {
       const txt = __logStore.map(r => `[${r.ts}] ${r.level.toUpperCase()} ${r.message}${r.stack ? '\n'+r.stack : ''}`).join('\n');
       await navigator.clipboard.writeText(txt);
-    } catch (_) {}
+    } catch {}
   };
   exportBtn.onclick = function() {
     const txt = __logStore.map(r => JSON.stringify(r)).join('\n');

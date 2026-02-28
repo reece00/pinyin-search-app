@@ -22,7 +22,7 @@ function loadDataFromLocalStorage() {
       if (typeof s.autoScrollOnOpen === 'boolean') {
         appData.autoScrollOnOpen = s.autoScrollOnOpen;
       }
-    } catch (_) {}
+    } catch {}
   }
 }
 
