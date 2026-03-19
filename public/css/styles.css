@@ -42,34 +42,28 @@ html, body {
   -webkit-overflow-scrolling: touch; /* iOS流畅滚动 */
 }
 
-/* 定义CSS变量用于动态高度 */
-:root {
-  --safe-area-inset-top: env(safe-area-inset-top);
-  --safe-area-inset-bottom: env(safe-area-inset-bottom);
-  --available-height: 100vh;
-  /* 视觉视口与布局变量，JS 初始化与监听更新 */
-  --visual-vh: 100vh;
-  --footer-h: 0px;
-  --filebar-h: 0px;
-  --main-pad-top: 0px;
-  --main-pad-bottom: 0px;
-}
 
-/* 全局防止iOS橡皮筋效果，但保留编辑器滚动功能 */
+
+/* 全局防止橡皮筋效果，但保留滚动功能 */
 html, body {
   overscroll-behavior: none;
-  position: fixed;
   width: 100%;
-  height: 100%;
+  height: 100dvh;
 }
 
+/* 补充 Tailwind 缺少的工具类，确保 Flex 布局能够正确约束高度 */
+.min-h-0 {
+  min-height: 0 !important;
+}
+
+.h-0 {
+  height: 0 !important;
+}
 
 /* 确保编辑器可以滚动 */
 #memo-editor {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  /* 采用视觉视口适配的高度计算，避免频繁JS测量 */
-  height: calc(var(--visual-vh) - var(--footer-h) - var(--filebar-h) - var(--main-pad-top) - var(--main-pad-bottom));
 }
 
 /* 搜索结果关闭按钮样式 */
@@ -100,48 +94,24 @@ html, body {
 
 /* 纯文字关闭按钮无需图标样式 */
 
-/* 检测并设置安全区域 */
-@supports (padding: env(safe-area-inset-top)) {
-  :root {
-    --safe-area-inset-top: env(safe-area-inset-top);
-    --safe-area-inset-bottom: env(safe-area-inset-bottom);
-  }
-}
+
 
 /* 搜索结果列表（自适应高度） */
 #search-results-list {
-  flex: 1 1 auto;
-  max-height: none;
-  overflow-y: auto;
+  max-height: 100%;
+  min-height: 0;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  min-height: 0;
   background-color: #f5f5f5;
   border-radius: 8px;
   margin-top: 4px;
   padding: 8px;
+  padding-top: 48px; /* 顶部留出空间给绝对定位的 results-count，防止首项被遮挡 */
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
   position: relative;
 }
 
-#search-results-page {
-  display: flex;
-  flex-direction: column;
-  height: calc(var(--visual-vh) - var(--footer-h) - var(--filebar-h) - var(--main-pad-top) - var(--main-pad-bottom));
-  overflow: hidden;
-}
 
-#search-results-page .relative {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-#search-results-top-spacer {
-  height: 32vh;
-  flex: 0 0 auto;
-}
 
 
 /* 合并至上方定义 */
@@ -208,91 +178,7 @@ input[type="text"]:focus {
   box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
 }
 
-/* 底部安全区域适配 */
-.safe-area-bottom {
-  padding-bottom: constant(safe-area-inset-bottom);
-  padding-bottom: env(safe-area-inset-bottom);
-}
 
-
-/* iOS 底部安全区填充：供 JS 动态添加 */
-/* 与 .safe-area-bottom 合并，避免重复语义 */
-
-/* iOS设备媒体查询 */
-@media screen and (max-width: 768px) {
-  /* 适配小屏幕设备 */
-  .ios-button {
-    min-width: 44px;
-    min-height: 44px;
-    /* iOS风格按钮效果 */
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-  }
-  
-  /* 优化文本大小 */
-  h1.text-xl {
-    font-size: 1.375rem;
-  }
-  
-  /* 优化文本框间距和尺寸 */
-  textarea#memo-editor {
-    min-height: 300px;
-    font-size: 16px; /* 防止iOS缩放 */
-  }
-  
-  /* 增加交互元素间距 */
-  .flex.space-x-4 {
-    gap: 1rem;
-  }
-}
-
-/* iOS设备特殊优化 */
-@media screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
-       screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
-       screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3),
-       screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) {
-  
-  /* 适配iPhone X及以上刘海屏设备 */
-  header {
-    padding-top: calc(1rem + env(safe-area-inset-top));
-  }
-  
-  footer {
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-    padding-top: 1rem;
-    /* 固定底部位置 */
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 100;
-  }
-  
-  /* 确保输入框不会被键盘遮挡（仅编辑器焦点时启用） */
-.keyboard-avoidance-active {
-  padding-bottom: 150px; /* 增加底部内边距 */
-}
-  
-  /* 优化弹窗位置 */
-  #file-popup {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  
-  /* iOS风格输入框 */
-  .ios-input {
-    font-size: 16px; /* 防止iOS缩放 */
-    padding: 12px;
-    border-radius: 12px;
-  }
-  
-  /* iOS风格底部栏 */
-  .ios-footer {
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-  }
-}
 #filename-bar {
   display: none;
 }

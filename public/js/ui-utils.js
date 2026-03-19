@@ -23,61 +23,7 @@ function showToast(message, elements) {
   }, 3000);
 }
 
-function updateLayoutForIOS(elements) {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window);
-  if (isIOS) {
-    document.documentElement.classList.add('ios-device');
-    if (elements.actionButtonsContainer) {
-      elements.actionButtonsContainer.classList.add('ios-bottom-padding');
-    }
-    if (elements.searchResultsPage) {
-      const searchResultsBottom = elements.searchResultsPage.querySelector('#search-results-bottom');
-      if (searchResultsBottom) {
-        searchResultsBottom.classList.add('ios-bottom-padding');
-      }
-    }
-  }
-}
 
-function preventRubberBandEffect() {
-  let startY;
-  const getScrollableAncestor = (target) => {
-    let el = target && target.nodeType === 1 ? target : null;
-    while (el && el !== document.body) {
-      const style = getComputedStyle(el);
-      const overflowY = style.overflowY;
-      const canScroll = (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') && el.scrollHeight > el.clientHeight;
-      if (canScroll) return el;
-      el = el.parentElement;
-    }
-    const docScrollEl = document.scrollingElement || document.body;
-    if (docScrollEl && docScrollEl.scrollHeight > docScrollEl.clientHeight) return docScrollEl;
-    return null;
-  };
-  document.addEventListener('touchstart', (e) => {
-    startY = e.touches[0].clientY;
-  }, { passive: false });
-  document.addEventListener('touchmove', (e) => {
-    const currentY = e.touches[0].clientY;
-    const deltaY = currentY - startY;
-    startY = currentY;
-    const scrollEl = getScrollableAncestor(e.target);
-    if (!scrollEl) {
-      e.preventDefault();
-      return;
-    }
-    if (scrollEl.id === 'memo-editor' || scrollEl.id === 'search-results-list') {
-      return;
-    }
-    const atTop = scrollEl.scrollTop <= 0;
-    const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 1;
-    const pullingDown = deltaY > 0;
-    const pushingUp = deltaY < 0;
-    if ((atTop && pullingDown) || (atBottom && pushingUp)) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-}
 
 function showAutoSaveIndicator(elements) {
   if (!elements || !elements.autoSaveIndicator) {
@@ -257,8 +203,6 @@ function initErrorMonitor(options = {}) {
 
 export {
   showToast,
-  updateLayoutForIOS,
-  preventRubberBandEffect,
   showAutoSaveIndicator,
   setupOutsideClickHandler,
   initPWA,

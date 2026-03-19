@@ -2,16 +2,11 @@
 import { appData, loadDataFromLocalStorage, saveCurrentFile, saveSettingsToLocalStorage } from './app-data.js';
 import { files, search } from './features.js';
 import { 
-  showToast, preventRubberBandEffect, initErrorMonitor, openClientLogOverlay
+  showToast, initErrorMonitor, openClientLogOverlay
 } from './ui-utils.js';
 
 // 全局DOM元素引用
 let elements = {};
-let layoutCache = {
-  mainPadTop: 0,
-  mainPadBottom: 0
-};
-let viewportRafPending = false;
 
 // 处理编辑器输入
 function handleEditorInput() {
@@ -42,51 +37,6 @@ function handleEditorInput() {
   
   // 记录编辑器状态
   appData.isModified = true;
-}
-
-// 动态计算主编辑框高度（排除底部工具栏与文件名栏）
-function adjustEditorHeight() {
-  const mainEl = elements.appMain || document.querySelector('main');
-  if (!mainEl) return;
-  if (!layoutCache.mainPadTop && !layoutCache.mainPadBottom) {
-    const mainStyle = getComputedStyle(mainEl);
-    layoutCache.mainPadTop = parseFloat(mainStyle.paddingTop) || 0;
-    layoutCache.mainPadBottom = parseFloat(mainStyle.paddingBottom) || 0;
-    document.documentElement.style.setProperty('--main-pad-top', `${layoutCache.mainPadTop}px`);
-    document.documentElement.style.setProperty('--main-pad-bottom', `${layoutCache.mainPadBottom}px`);
-  }
-}
-
-function updateVisualViewportVar() {
-  if (viewportRafPending) return;
-  viewportRafPending = true;
-  requestAnimationFrame(() => {
-    viewportRafPending = false;
-    const vh = (window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight;
-    document.documentElement.style.setProperty('--visual-vh', `${Math.floor(vh)}px`);
-  });
-}
-
-function setupLayoutObservers() {
-  const footerEl = elements.appFooter || document.querySelector('footer');
-  const filenameBarEl = elements.filenameBar || document.getElementById('filename-bar');
-  if (!footerEl || !filenameBarEl) return;
-
-  const roFooter = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      const h = Math.round(entry.contentRect.height);
-      document.documentElement.style.setProperty('--footer-h', `${h}px`);
-    }
-  });
-  roFooter.observe(footerEl);
-
-  const roFileBar = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      const h = Math.round(entry.contentRect.height);
-      document.documentElement.style.setProperty('--filebar-h', `${h}px`);
-    }
-  });
-  roFileBar.observe(filenameBarEl);
 }
 
 function getFileOrder() {
@@ -225,6 +175,26 @@ function setupEditorSwipe() {
       elements.secondaryMenu.classList.add('hidden');
     });
   }
+  // 英文键盘模式（密码框）开关
+  if (elements.menuPasswordModeBtn && elements.secondaryMenu) {
+    const updatePasswordMode = () => {
+      const isEnabled = appData.passwordModeEnabled;
+      elements.menuPasswordModeBtn.textContent = `英文键盘模式：${isEnabled ? '开' : '关'}`;
+      if (elements.searchInput) {
+        elements.searchInput.type = isEnabled ? 'password' : 'text';
+      }
+    };
+    // 初始状态更新
+    updatePasswordMode();
+    
+    elements.menuPasswordModeBtn.addEventListener('click', () => {
+      appData.passwordModeEnabled = !appData.passwordModeEnabled;
+      saveSettingsToLocalStorage();
+      updatePasswordMode();
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+
   if (elements.menuRenameFileBtn && elements.secondaryMenu) {
     elements.menuRenameFileBtn.addEventListener('click', () => {
       files.handleRenameFile(elements);
@@ -291,26 +261,19 @@ function setupEditorSwipe() {
   }
   elements.searchInput.addEventListener('input', () => search.handleSearchInput(elements));
   elements.searchInput.addEventListener('focus', () => search.handleSearchFocus(elements));
-  elements.searchInput.addEventListener('blur', () => search.handleSearchBlur(elements));
   elements.clearInputBtn.addEventListener('click', () => search.clearSearchInput(elements));
   
   elements.memoEditor.addEventListener('input', handleEditorInput);
-  // 编辑器焦点时启用底部填充，避免键盘遮挡；失焦时关闭
-  elements.memoEditor.addEventListener('focus', () => {
-    if (elements.appMain) {
-      elements.appMain.classList.add('keyboard-avoidance-active'); // 键盘避让类开关（iOS）
-    }
-  });
-  elements.memoEditor.addEventListener('blur', () => {
-    if (elements.appMain) {
-      elements.appMain.classList.remove('keyboard-avoidance-active'); // 键盘避让类开关（iOS）
-    }
-  });
+  
   elements.closeSearchResultsButton.addEventListener('click', () => search.clearSearchInput(elements));
   
-  // 阻止点击弹窗内元素时关闭弹窗
-  elements.filePopup.addEventListener('click', (e) => e.stopPropagation());
-  
+  // 点击弹窗背景（backdrop）时关闭弹窗
+  elements.filePopup.addEventListener('click', (e) => {
+    if (e.target === elements.filePopup) {
+      elements.filePopup.close();
+    }
+  });
+
   // 绑定文件列表点击事件（由renderFileList函数内部绑定）
   setupEditorSwipe();
 }
@@ -343,6 +306,7 @@ function initApp() {
     secondaryMenuBtn: document.getElementById('secondary-menu-btn'),
     secondaryMenu: document.getElementById('secondary-menu'),
     menuScrollOnOpenBtn: document.getElementById('menu-scroll-on-open-btn'),
+    menuPasswordModeBtn: document.getElementById('menu-password-mode-btn'),
     menuRenameFileBtn: document.getElementById('menu-rename-file-btn'),
     menuNewFileBtn: document.getElementById('menu-new-file-btn'),
     menuDeleteBtn: document.getElementById('menu-delete-btn'),
@@ -360,7 +324,6 @@ function initApp() {
     searchResultsPage: document.getElementById('search-results-page'),
     searchResultsList: document.getElementById('search-results-list'),
     closeSearchResultsButton: document.getElementById('close-search-results'),
-    searchResultsTopSpacer: document.getElementById('search-results-top-spacer'),
     searchResultsCloseContainer: document.getElementById('search-results-close-container'),
     resultsCount: document.getElementById('results-count'),
     noResultsMessage: document.getElementById('no-results-message'),
@@ -389,22 +352,6 @@ function initApp() {
   
   // 绑定事件
   bindEvents();
-
-  setupLayoutObservers();
-
-  // 初始化并监听视觉视口变化
-  updateVisualViewportVar();
-  window.addEventListener('resize', updateVisualViewportVar);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', updateVisualViewportVar);
-  }
-
-  // 初始化主容器内边距变量
-  adjustEditorHeight();
-  
-  // 适配iOS布局
-  // 阻止橡皮筋效果
-  preventRubberBandEffect();
   
   // 初始化 PWA 注册与安装提示（仅在 PWA 安装形态注册 SW）
   const isPWAInstalled = (() => {

@@ -148,9 +148,11 @@ function handleResetFilename(elements) {
 
 function toggleFilePopup(elements) {
   if (elements.filePopup) {
-    elements.filePopup.classList.toggle('hidden')
-    if (!elements.filePopup.classList.contains('hidden')) {
+    if (elements.filePopup.open) {
+      elements.filePopup.close()
+    } else {
       renderFileList(elements)
+      elements.filePopup.showModal()
     }
   } else {
     console.error('filePopup element not found')
@@ -159,10 +161,7 @@ function toggleFilePopup(elements) {
 
 function closeFilePopup(elements) {
   if (elements.filePopup) {
-    elements.filePopup.classList.add('hidden')
-    elements.filePopup.style.transition = 'opacity 0.2s ease'
-    elements.filePopup.style.opacity = '0'
-    setTimeout(() => { elements.filePopup.style.opacity = '1' }, 200)
+    elements.filePopup.close()
   } else {
     console.error('filePopup element not found')
   }
@@ -231,21 +230,6 @@ function loadPinyinPro() {
     document.head.appendChild(script)
   })
   return pinyinProLoadPromise
-}
-
-function updateTopSpacerVisibility(elements) {
-  if (!elements || !elements.searchResultsTopSpacer) return
-  const isActive = document.activeElement === elements.searchInput
-  const hasPendingHide = appData.searchSpacerTimer != null
-  const hasQuery = (elements.searchInput && elements.searchInput.value.trim().length > 0) || (appData.searchQuery && appData.searchQuery.length > 0)
-  const resultsVisible = !!(elements.searchResultsPage && !elements.searchResultsPage.classList.contains('hidden'))
-  const shouldShow = resultsVisible && hasQuery && (isActive || hasPendingHide)
-  if (shouldShow) {
-    const isStandalone = !!(typeof navigator !== 'undefined' && navigator && navigator['standalone'] === true)
-    const pwa = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || isStandalone
-    elements.searchResultsTopSpacer.style.height = pwa ? 'calc(40vh + var(--safe-area-inset-top))' : '32vh'
-  }
-  elements.searchResultsTopSpacer.classList.toggle('hidden', !shouldShow)
 }
 
 function parseAddressContent(content) {
@@ -400,7 +384,6 @@ function showSearchResultsPage(results, elements) {
   elements.searchResultsPage.classList.remove('hidden')
   if (elements.actionButtonsContainer) { elements.actionButtonsContainer.classList.add('hidden') }
   if (elements.searchResultsCloseContainer) { elements.searchResultsCloseContainer.classList.remove('hidden') }
-  updateTopSpacerVisibility(elements)
   renderSearchResults(results, elements)
 }
 
@@ -468,23 +451,10 @@ function handleSearchInput(elements) {
 
 function handleSearchFocus(elements) {
   const query = elements.searchInput.value.trim().toLowerCase()
-  updateTopSpacerVisibility(elements)
-  if (appData.searchSpacerTimer) { clearTimeout(appData.searchSpacerTimer); appData.searchSpacerTimer = null }
   if (query) {
     appData.searchQuery = query
     if (isPinyinReady()) { performSearch(elements) } else { scheduleFirstSearchOnce(elements) }
   }
-}
-
-function handleSearchBlur(elements) {
-  if (appData.searchSpacerTimer) { clearTimeout(appData.searchSpacerTimer) }
-  const hasQuery = (elements.searchInput && elements.searchInput.value.trim().length > 0) || (appData.searchQuery && appData.searchQuery.length > 0)
-  if (!hasQuery) {
-    appData.searchSpacerTimer = null
-    updateTopSpacerVisibility(elements)
-    return
-  }
-  appData.searchSpacerTimer = setTimeout(() => { appData.searchSpacerTimer = null; updateTopSpacerVisibility(elements) }, 600)
 }
 
 function scheduleFirstSearchOnce(elements) {
@@ -587,7 +557,6 @@ export const search = {
   showEditorPage,
   handleSearchInput,
   handleSearchFocus,
-  handleSearchBlur,
   clearSearchInput,
   scrollToAddress
 }
