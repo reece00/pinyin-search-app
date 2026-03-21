@@ -4,7 +4,6 @@ dist/
 build/
 out/
 .cache/
-coverage/
 .DS_Store
 Thumbs.db
 *.log
@@ -16,9 +15,6 @@ pnpm-debug.log*
 *.local
 .vercel/
 .vscode/
-playwright-report/
-reports/
-test-results/
 Desktop.ini
 .idea/
 .eslintcache

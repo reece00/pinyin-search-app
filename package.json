@@ -12,18 +12,12 @@
     "lint": "eslint \"public/**/*.js\" -c ./config/eslint.config.js",
     "lint:fix": "eslint \"public/**/*.js\" --fix -c ./config/eslint.config.js",
     "stylelint": "stylelint \"config/tailwind-input.css\" --config ./config/.stylelintrc.json",
-    "stylelint:fix": "stylelint \"config/tailwind-input.css\" --fix --config ./config/.stylelintrc.json",
-    "test:e2e": "playwright test",
-    "test:e2e:fast": "set PW_FAST=1&& playwright test",
-    "test:pwa": "set RUN_PWA=1&& playwright test tests/pwa.spec.ts",
-    "test:pwa:json": "set RUN_PWA=1&& playwright test tests/pwa.spec.ts --reporter=json > reports/pwa.json"
+    "stylelint:fix": "stylelint \"config/tailwind-input.css\" --fix --config ./config/.stylelintrc.json"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
     "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-plugin-import": "^2.32.0",
-    "playwright": "^1.56.1",
     "stylelint": "^16.25.0",
     "stylelint-config-standard": "^39.0.1",
     "stylelint-no-unsupported-browser-features": "^8.0.5",
