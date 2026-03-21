@@ -11,13 +11,13 @@
 }
 
 .dark {
-  --bg-main: #111827;      /* gray-900 */
-  --bg-card: #1f2937;      /* gray-800 */
-  --bg-secondary: #374151; /* gray-700 */
+  --bg-main: #1f2937;      /* gray-800 */
+  --bg-card: #374151;      /* gray-700 */
+  --bg-secondary: #4b5563; /* gray-600 */
   --text-main: #f9fafb;    /* gray-50 */
-  --text-secondary: #9ca3af; /* gray-400 */
-  --border-color: #374151;   /* gray-700 */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --text-secondary: #d1d5db; /* gray-300 */
+  --border-color: #4b5563;   /* gray-600 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 /* 自定义字体导入（统一为WOFF2并启用swap策略） */
