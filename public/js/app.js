@@ -5,8 +5,10 @@ import {
   showToast, initErrorMonitor, openClientLogOverlay
 } from './ui-utils.js';
 
-// 全局DOM元素引用
+// 全局 DOM 元素引用
 let elements = {};
+// 存储外部点击事件处理函数引用，用于正确移除监听器
+let outsideClickHandler = null;
 
 // 处理编辑器输入
 function handleEditorInput() {
@@ -139,17 +141,32 @@ function setupEditorSwipe() {
     // 阻止按钮点击事件冒泡，避免立即触发外部关闭
     elements.secondaryMenuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      // 如果已有监听器，先移除
+      if (outsideClickHandler) {
+        document.removeEventListener('click', outsideClickHandler);
+        outsideClickHandler = null;
+      }
       elements.secondaryMenu.classList.toggle('hidden');
       if (!elements.secondaryMenu.classList.contains('hidden')) {
         // 延迟绑定外部点击关闭，避免本次点击被捕获
         setTimeout(() => {
-          document.addEventListener('click', function handleOutsideClick(event) {
+          outsideClickHandler = function handleOutsideClick(event) {
             if (elements.secondaryMenu && !elements.secondaryMenu.contains(event.target)) {
               elements.secondaryMenu.classList.add('hidden');
-              document.removeEventListener('click', handleOutsideClick);
+              if (outsideClickHandler) {
+                document.removeEventListener('click', outsideClickHandler);
+                outsideClickHandler = null;
+              }
             }
-          });
+          };
+          document.addEventListener('click', outsideClickHandler);
         }, 0);
+      } else {
+        // 菜单关闭时移除监听器
+        if (outsideClickHandler) {
+          document.removeEventListener('click', outsideClickHandler);
+          outsideClickHandler = null;
+        }
       }
     });
     // 菜单内部点击不触发外部关闭
@@ -310,7 +327,7 @@ function initApp() {
     /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
     host.endsWith('.local')
   );
-  initErrorMonitor({ endpoint: './__client-logs', overlay: true, levels: ['error','warn','log','info','debug'], disableSend: !isLan, trigger: 'menu' });
+  initErrorMonitor({ overlay: true, levels: ['error','warn','log','info','debug'], trigger: 'menu' });
   console.log('正在初始化应用...');
   
   // 获取DOM元素引用

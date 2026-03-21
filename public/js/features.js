@@ -105,7 +105,13 @@ function handleRenameFile(elements) {
   }
   if (trimmedName === appData.currentFile) return
   if (appData.files[trimmedName]) {
-    showToast('文件名已存在', elements)
+    if (confirm('文件名已存在，是否覆盖该文件的内容？')) {
+      appData.files[trimmedName] = appData.files[appData.currentFile]
+      delete appData.files[appData.currentFile]
+      appData.currentFile = trimmedName
+      saveDataToLocalStorage()
+      showToast('文件已重命名（已覆盖）', elements)
+    }
     return
   }
   appData.files[trimmedName] = appData.files[appData.currentFile]
@@ -132,11 +138,17 @@ function handleResetFilename(elements) {
   }
   const firstLine = lines[0].trim()
   if (firstLine.length > 20) {
-    showToast('第一行文本过长（超过20字符），无法作为文件名', elements)
+    showToast('第一行文本过长（超过 20 字符），无法作为文件名', elements)
     return
   }
   if (appData.files[firstLine]) {
-    showToast('该文件名已存在', elements)
+    if (confirm('文件名已存在，是否覆盖该文件的内容？')) {
+      appData.files[firstLine] = appData.files[appData.currentFile]
+      delete appData.files[appData.currentFile]
+      appData.currentFile = firstLine
+      saveDataToLocalStorage()
+      showToast('文件名已重置（已覆盖）', elements)
+    }
     return
   }
   appData.files[firstLine] = appData.files[appData.currentFile]

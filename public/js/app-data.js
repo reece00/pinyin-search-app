@@ -77,7 +77,7 @@ function initDarkMode() {
   
   // 监听系统偏好变化
   if (window.matchMedia) {
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (_) => {
       if (appData.darkMode === 'system') {
         applyDarkMode('system');
       }

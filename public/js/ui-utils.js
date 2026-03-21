@@ -123,10 +123,8 @@ function __buildRecord(level, args) {
 }
 
 function initErrorMonitor(options = {}) {
-  const endpoint = options.endpoint || './__client-logs';
   const enableOverlay = options.overlay !== false;
   const levels = Array.isArray(options.levels) && options.levels.length ? new Set(options.levels) : new Set(['error','warn']);
-  const disableSend = !!options.disableSend;
   const trigger = options.trigger || 'menu';
   const origLog = console.log.bind(console);
   const origInfo = console.info ? console.info.bind(console) : (..._args) => {};
@@ -137,19 +135,6 @@ function initErrorMonitor(options = {}) {
   function push(rec) {
     __logStore.push(rec);
     if (__logStore.length > 1000) __logStore.splice(0, __logStore.length - 1000);
-  }
-
-  function send(record) {
-    if (disableSend) return;
-    try {
-      const data = JSON.stringify(record);
-      if (navigator.sendBeacon) {
-        const blob = new Blob([data], { type: 'application/json' });
-        navigator.sendBeacon(endpoint, blob);
-      } else {
-        fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: data, keepalive: true }).catch(() => {});
-      }
-    } catch {}
   }
 
   function wrap(methodName, level, orig) {
@@ -175,13 +160,11 @@ function initErrorMonitor(options = {}) {
     if (e.error) args.push(e.error); else args.push(e.message || 'error');
     const rec = __buildRecord('error', args);
     push(rec);
-    send(rec);
   });
   window.addEventListener('unhandledrejection', function(e) {
     const r = e && e.reason ? e.reason : 'unhandledrejection';
     const rec = __buildRecord('error', [r]);
     push(rec);
-    send(rec);
   });
 
   if (enableOverlay) {

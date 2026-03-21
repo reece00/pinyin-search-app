@@ -77,11 +77,14 @@ self.addEventListener('fetch', /** @param {FetchEvent} event */ (event) => {
             return networkResponse;
           })
           .catch(() => {
-            // 网络请求失败且是HTML请求，返回缓存的离线页面或首页
+            // 网络请求失败且是 HTML 请求，返回缓存的离线页面或首页
             if (event.request.headers.get('accept')?.includes('text/html')) {
-              return caches.match('./index.html');
+              // 使用完整 URL 确保正确匹配，兼容子目录部署
+              const indexUrl = new URL('index.html', self.location.origin + self.registration.scope).href;
+              return caches.match(indexUrl)
+                .then(response => response || caches.match('./index.html'));
             }
-            // 其他资源请求失败返回一个基本的响应，而不是undefined
+            // 其他资源请求失败返回一个基本的响应，而不是 undefined
             return new Response('Network error happened', {
               status: 408,
               headers: { 'Content-Type': 'text/plain' }
