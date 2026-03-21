@@ -4,6 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
   
+  <!-- 阻塞脚本：极致首屏主题检测，防止暗色模式白屏闪烁 (FOUC) -->
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('addressBookSettings');
+        const config = saved ? JSON.parse(saved) : {};
+        const mode = config.darkMode || 'system';
+        const isDark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          // 动态创建临时样式，确保在外部 CSS 加载前背景就是深色的
+          const style = document.createElement('style');
+          style.id = 'theme-pre-setup';
+          style.innerHTML = 'html.dark { background-color: #111827 !important; } html.dark body { background-color: #111827 !important; color: #f9fafb !important; }';
+          document.head.appendChild(style);
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- PWA相关meta标签 -->
   <meta name="description" content="一个便捷的地址首字母搜索和管理工具">
   <meta name="theme-color" content="#3b82f6">
@@ -29,22 +49,6 @@
   <link rel="stylesheet" href="css/styles.css">
   <!-- 空图标占位，避免浏览器请求 /favicon.ico 报错 -->
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y2bYp0AAAAASUVORK5CYII=">
-  
-  <!-- 阻塞脚本：首屏主题检测，防止暗色模式白屏闪烁 (FOUC) -->
-  <script>
-    (function() {
-      try {
-        const saved = localStorage.getItem('addressBookSettings');
-        if (saved) {
-          const config = JSON.parse(saved);
-          const mode = config.darkMode || 'system';
-          if (mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-          }
-        }
-      } catch (e) {}
-    })();
-  </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-dark dark:text-gray-100 no-custom-font font-sans flex flex-col h-[100dvh] overflow-hidden">
   
