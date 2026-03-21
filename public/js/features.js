@@ -446,10 +446,6 @@ function handleSearchInput(elements) {
   const query = elements.searchInput.value.trim().toLowerCase()
   appData.searchQuery = query
   elements.clearInputBtn.classList.toggle('hidden', !query)
-  if (!elements.searchResultsPage.classList.contains('hidden')) {
-    if (elements.searchResultsInput) { elements.searchResultsInput.value = query }
-    if (elements.searchResultsClearBtn) { elements.searchResultsClearBtn.classList.toggle('hidden', !query) }
-  }
   if (!query) {
     if (appData.debounceTimer) { clearTimeout(appData.debounceTimer); appData.debounceTimer = null }
     showEditorPage(elements)

@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
-// 缓存版本标识 (由 build 脚本自动同步 package.json version)
+// 缓存版本标识 - GitHub Actions 部署时会自动更新时间戳 (见 .github/workflows/static.yml)
+// 本地开发使用固定版本 1.0.0，部署后会自动替换为时间戳
 const CACHE_VERSION = '1.0.0';
 const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 // 在部分 IDE 中，`self` 会被当作 `Window` 类型。通过 `unknown` 中转再断言为 ServiceWorker 作用域。
@@ -13,15 +14,15 @@ self.addEventListener('install', /** @param {ExtendableEvent} event */ (event) =
 // 激活事件 - 清理旧缓存
 self.addEventListener('activate', /** @param {ExtendableEvent} event */ (event) => {
   const cacheWhitelist = [CACHE_NAME];
-  
+
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
         // 过滤掉不需要删除的缓存，避免Promise.all中包含undefined
-          const cachesToDelete = cacheNames.filter((cacheName) => 
+          const cachesToDelete = cacheNames.filter((cacheName) =>
             cacheWhitelist.indexOf(cacheName) === -1
           );
-          
+
           return Promise.all(
             cachesToDelete.map((cacheName) => {
               // 删除旧缓存
@@ -62,7 +63,7 @@ self.addEventListener('fetch', /** @param {FetchEvent} event */ (event) => {
 
             // 克隆响应，一份存入缓存，一份返回给浏览器
             const responseToCache = networkResponse.clone();
-            
+
             // 仅缓存GET请求和同源资源
             if (event.request.method === 'GET' && new URL(event.request.url).origin === self.location.origin) {
               caches.open(CACHE_NAME)
@@ -80,7 +81,7 @@ self.addEventListener('fetch', /** @param {FetchEvent} event */ (event) => {
             // 网络请求失败且是 HTML 请求，返回缓存的离线页面或首页
             if (event.request.headers.get('accept')?.includes('text/html')) {
               // 使用完整 URL 确保正确匹配，兼容子目录部署
-              const indexUrl = new URL('index.html', self.location.origin + self.registration.scope).href;
+              const indexUrl = new URL('index.html', self.location.origin + sw.registration.scope).href;
               return caches.match(indexUrl)
                 .then(response => response || caches.match('./index.html'));
             }
@@ -102,6 +103,6 @@ self.addEventListener('message', /** @param {ExtendableMessageEvent} event */ (e
   if (event.data && event.data.type === 'SKIP_WAITING') { // 版本切换消息约定
     sw.skipWaiting();
   }
-  
+
   // 可以在这里添加更多消息类型的处理逻辑
 });

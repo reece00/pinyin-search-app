@@ -177,8 +177,3 @@ input[type="text"]:focus {
   outline: none;
   box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
 }
-
-
-#filename-bar {
-  display: none;
-}

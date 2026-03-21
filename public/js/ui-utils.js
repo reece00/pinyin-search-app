@@ -25,66 +25,6 @@ function showToast(message, elements) {
 
 
 
-function showAutoSaveIndicator(elements) {
-  if (!elements || !elements.autoSaveIndicator) {
-    console.error('未找到自动保存提示元素');
-    return;
-  }
-  const indicator = elements.autoSaveIndicator;
-  indicator.classList.remove('hidden');
-  indicator.classList.remove('opacity-0');
-  indicator.classList.add('opacity-100');
-  setTimeout(() => {
-    indicator.classList.remove('opacity-100');
-    indicator.classList.add('opacity-0');
-    setTimeout(() => {
-      indicator.classList.add('hidden');
-    }, 300);
-  }, 1000);
-}
-
-function setupOutsideClickHandler(element, closeCallback) {
-  document.addEventListener('click', function handleOutsideClick(event) {
-    if (element && !element.contains(event.target)) {
-      closeCallback();
-      document.removeEventListener('click', handleOutsideClick);
-    }
-  });
-}
-
-function initPWA() {
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(registration => { console.log('Service Worker 注册成功:', registration.scope); })
-        .catch(error => { console.log('Service Worker 注册失败:', error); });
-      navigator.serviceWorker.addEventListener('controllerchange', () => { window.location.reload(); });
-      navigator.serviceWorker.ready.then(() => {
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-        }
-      });
-    });
-  }
-  let deferredPrompt;
-  const addBtn = document.querySelector('#install-button');
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (addBtn) { addBtn.classList.remove('hidden'); }
-  });
-  if (addBtn) {
-    addBtn.addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`用户选择: ${outcome}`);
-      deferredPrompt = null;
-      addBtn.classList.add('hidden');
-    });
-  }
-}
-
 let __logDeviceId = localStorage.getItem('logDeviceId');
 if (!__logDeviceId) {
   __logDeviceId = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -275,9 +215,6 @@ function openClientLogOverlay() {
 
 export {
   showToast,
-  showAutoSaveIndicator,
-  setupOutsideClickHandler,
-  initPWA,
   initErrorMonitor,
   openClientLogOverlay
 };

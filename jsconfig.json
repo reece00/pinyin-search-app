@@ -4,11 +4,7 @@
     "lib": ["es2020", "dom", "webworker"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "baseUrl": ".",
-    "paths": {
-      "/js/*": ["public/js/*"],
-      "/css/*": ["public/css/*"]
-    }
+    "baseUrl": "."
   },
   "exclude": ["node_modules"]
 }

@@ -327,7 +327,6 @@ function initApp() {
   // 获取 DOM 元素引用
   elements = {
     memoEditor: document.getElementById('memo-editor'),
-    filenameBar: document.getElementById('filename-bar'),
     appMain: document.querySelector('main'),
     appFooter: document.querySelector('footer'),
     fileButton: document.getElementById('file-switch-btn'),
