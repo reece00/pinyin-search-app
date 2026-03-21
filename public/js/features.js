@@ -188,7 +188,7 @@ function renderFileList(elements) {
   const filesOrder = Object.keys(appData.files)
   filesOrder.forEach(filename => {
     const fileItem = document.createElement('div')
-    fileItem.className = `p-3 rounded-lg flex justify-between items-center ${appData.currentFile === filename ? 'bg-blue-50 text-primary' : 'hover:bg-gray-50 cursor-pointer'}`
+    fileItem.className = `p-3 rounded-lg flex justify-between items-center ${appData.currentFile === filename ? 'bg-blue-50 dark:bg-blue-900/30 text-primary' : 'hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer'}`
     if (appData.currentFile !== filename) {
       fileItem.addEventListener('click', () => {
         openFile(filename, elements)
@@ -213,7 +213,7 @@ function renderFileList(elements) {
       fileActions.appendChild(currentBadge)
     }
     const deleteBtn = document.createElement('button')
-    deleteBtn.className = 'text-sm bg-red-100 text-red-600 px-3 py-1.5 rounded-full border border-red-200 hover:bg-red-200 min-w-[72px] transition-colors'
+    deleteBtn.className = 'text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 px-3 py-1.5 rounded-full border border-red-200 dark:border-red-800/50 hover:bg-red-200 dark:hover:bg-red-800/70 min-w-[72px] transition-colors'
     deleteBtn.textContent = '删除'
     deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); handleDeleteFile(filename, elements) })
     fileActions.appendChild(deleteBtn)
