@@ -29,6 +29,22 @@
   <link rel="stylesheet" href="css/styles.css">
   <!-- 空图标占位，避免浏览器请求 /favicon.ico 报错 -->
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y2bYp0AAAAASUVORK5CYII=">
+  
+  <!-- 阻塞脚本：首屏主题检测，防止暗色模式白屏闪烁 (FOUC) -->
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('addressBookSettings');
+        if (saved) {
+          const config = JSON.parse(saved);
+          const mode = config.darkMode || 'system';
+          if (mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+          }
+        }
+      } catch (e) {}
+    })();
+  </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-dark dark:text-gray-100 no-custom-font font-sans flex flex-col h-[100dvh] overflow-hidden">
   
