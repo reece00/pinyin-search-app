@@ -111,6 +111,12 @@ html, body {
   position: relative;
 }
 
+/* 暗色模式下的搜索结果列表 */
+.dark #search-results-list {
+  background-color: #1f2937;
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.05);
+}
+
 
 
 

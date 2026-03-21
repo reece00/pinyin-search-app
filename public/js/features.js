@@ -319,12 +319,12 @@ function renderSearchResults(results, elements) {
   elements.resultsCount.textContent = `已找到${results.length}项`
   results.forEach(item => {
     const resultItem = document.createElement('div')
-    resultItem.className = 'p-3 bg-white rounded-lg shadow-sm border border-gray-200'
+    resultItem.className = 'p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700'
     const addressTitle = document.createElement('h3')
-    addressTitle.className = 'text-base font-medium text-dark'
+    addressTitle.className = 'text-base font-medium text-dark dark:text-gray-100'
     addressTitle.innerHTML = highlightMatchingText(item.address, query)
     const notesContent = document.createElement('div')
-    notesContent.className = 'text-sm text-gray-600 mt-2'
+    notesContent.className = 'text-sm text-gray-600 dark:text-gray-400 mt-2'
     if (item.notes) {
       const noteLines = item.notes.split('\n')
       noteLines.forEach((line, index) => {
@@ -335,7 +335,7 @@ function renderSearchResults(results, elements) {
           notesContent.appendChild(noteLine)
         } else if (index === 3) {
           const moreNote = document.createElement('p')
-          moreNote.className = 'text-xs text-gray-400'
+          moreNote.className = 'text-xs text-gray-400 dark:text-gray-500'
           moreNote.textContent = `...还有${noteLines.length - 3}行`
           notesContent.appendChild(moreNote)
         }
