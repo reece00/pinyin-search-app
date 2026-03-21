@@ -143,7 +143,6 @@ function initErrorMonitor(options = {}) {
       if (levels.has(level)) {
         const rec = __buildRecord(level, args);
         push(rec);
-        send(rec);
       }
       orig(...args);
     };

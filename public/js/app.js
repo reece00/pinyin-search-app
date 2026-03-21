@@ -321,16 +321,10 @@ function setupEditorSwipe() {
 
 // 初始化应用
 function initApp() {
-  const host = location.hostname || '';
-  const isLan = (
-    host === 'localhost' || host === '127.0.0.1' || host === '::1' ||
-    /^10\./.test(host) || /^192\.168\./.test(host) || /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
-    host.endsWith('.local')
-  );
   initErrorMonitor({ overlay: true, levels: ['error','warn','log','info','debug'], trigger: 'menu' });
   console.log('正在初始化应用...');
   
-  // 获取DOM元素引用
+  // 获取 DOM 元素引用
   elements = {
     memoEditor: document.getElementById('memo-editor'),
     filenameBar: document.getElementById('filename-bar'),
