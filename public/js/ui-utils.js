@@ -125,84 +125,51 @@ function initErrorMonitor(options = {}) {
 
 function openClientLogOverlay() {
   if (document.getElementById('client-log-overlay')) return;
-  const isDark = document.documentElement.classList.contains('dark');
   const wrap = document.createElement('div');
   wrap.id = 'client-log-overlay';
-  wrap.style.position = 'fixed';
-  wrap.style.top = '0';
-  wrap.style.left = '0';
-  wrap.style.right = '0';
-  wrap.style.bottom = '0';
-  wrap.style.background = 'rgba(0,0,0,0.7)';
-  wrap.style.zIndex = '9999';
-  wrap.style.backdropFilter = 'blur(4px)';
+  
   const panel = document.createElement('div');
-  panel.style.position = 'absolute';
-  panel.style.top = '10%';
-  panel.style.left = '5%';
-  panel.style.right = '5%';
-  panel.style.bottom = '10%';
-  panel.style.background = isDark ? '#1f2937' : '#fff';
-  panel.style.color = isDark ? '#f3f4f6' : '#111827';
-  panel.style.borderRadius = '12px';
-  panel.style.boxShadow = isDark ? '0 4px 20px rgba(0,0,0,0.5)' : '0 4px 20px rgba(0,0,0,0.2)';
-  panel.style.display = 'flex';
-  panel.style.flexDirection = 'column';
+  panel.id = 'client-log-panel';
+  
   const bar = document.createElement('div');
-  bar.style.display = 'flex';
-  bar.style.justifyContent = 'space-between';
-  bar.style.alignItems = 'center';
-  bar.style.padding = '10px 12px';
+  bar.id = 'client-log-header';
+  
   const title = document.createElement('div');
   title.textContent = '客户端日志';
-  title.style.fontSize = '16px';
   title.style.fontWeight = '600';
+  
   const btns = document.createElement('div');
   const closeBtn = document.createElement('button');
   closeBtn.textContent = '关闭';
-  closeBtn.style.marginLeft = '8px';
+  closeBtn.className = 'log-btn';
   const copyBtn = document.createElement('button');
   copyBtn.textContent = '复制';
+  copyBtn.className = 'log-btn';
   const exportBtn = document.createElement('button');
   exportBtn.textContent = '导出';
-  
-  // 基础按钮样式
-  [copyBtn, exportBtn, closeBtn].forEach(btn => {
-    btn.style.padding = '4px 10px';
-    btn.style.borderRadius = '6px';
-    btn.style.fontSize = '12px';
-    btn.style.background = isDark ? '#374151' : '#f3f4f6';
-    btn.style.color = isDark ? '#d1d5db' : '#4b5563';
-    btn.style.border = 'none';
-  });
+  exportBtn.className = 'log-btn';
   
   btns.appendChild(copyBtn);
   btns.appendChild(exportBtn);
   btns.appendChild(closeBtn);
   bar.appendChild(title);
   bar.appendChild(btns);
+  
   const list = document.createElement('div');
-  list.style.flex = '1';
-  list.style.overflow = 'auto';
-  list.style.fontFamily = 'monospace';
-  list.style.fontSize = '12px';
-  list.style.padding = '8px 12px';
-  list.style.borderTop = isDark ? '1px solid #374151' : '1px solid #eee';
+  list.id = 'client-log-list';
+  
   function render() {
     list.innerHTML = '';
     __logStore.slice(-200).forEach(rec => {
       const el = document.createElement('div');
+      el.className = `log-item ${rec.level === 'error' ? 'error' : (rec.level === 'warn' ? 'warn' : 'info')}`;
       el.textContent = `[${rec.ts}] ${rec.level.toUpperCase()} ${rec.message}`;
-      const baseColor = isDark ? '#f3f4f6' : '#111827';
-      const warnColor = isDark ? '#fbbf24' : '#b45309';
-      const errColor = isDark ? '#f87171' : '#b91c1c';
-      el.style.color = rec.level === 'error' ? errColor : (rec.level === 'warn' ? warnColor : baseColor);
       list.appendChild(el);
+      
       if (rec.stack) {
         const st = document.createElement('div');
+        st.className = 'log-stack';
         st.textContent = rec.stack;
-        st.style.whiteSpace = 'pre-wrap';
-        st.style.color = isDark ? '#9ca3af' : '#6b7280';
         list.appendChild(st);
       }
     });
