@@ -29,17 +29,17 @@
   
   <style></style>
 </head>
-<body class="bg-gray-50 no-custom-font font-sans text-dark flex flex-col h-[100dvh] overflow-hidden">
+<body class="bg-gray-50 dark:bg-gray-900 text-dark dark:text-gray-100 no-custom-font font-sans flex flex-col h-[100dvh] overflow-hidden">
   
   <!-- 主要内容区域 -->
   <main class="flex-1 p-4 overflow-hidden flex flex-col min-h-0 h-0">
     <!-- 文本编辑器页面 -->
     <div id="editor-page" class="flex-1 flex flex-col min-h-0 h-full">
       <!-- 文件名显示（隐藏） -->
-      <div id="filename-bar" class="p-2 bg-gray-50 border-b border-gray-200">
-        <div id="filename-display" class="text-sm text-gray-700 truncate text-center">新备忘录1</div>
+      <div id="filename-bar" class="p-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div id="filename-display" class="text-sm text-gray-700 dark:text-gray-300 truncate text-center">新备忘录 1</div>
       </div>
-      <textarea id="memo-editor" class="w-full flex-1 p-4 bg-white rounded-lg shadow-sm border border-gray-200 focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none resize-none" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="请输入地址和备注，格式如下：
+      <textarea id="memo-editor" class="w-full flex-1 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none resize-none text-dark dark:text-gray-100" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" placeholder="请输入地址和备注，格式如下：
         地址1
         备注1
         备注2
@@ -57,18 +57,21 @@
       <div class="relative flex-1 flex flex-col min-h-0 h-full">
         <!-- 结果计数显示在右上角 -->
         <div class="absolute top-2 right-2 z-10">
-          <span id="results-count" class="text-base bg-gray-100 text-gray-700 px-4 py-2 rounded-full font-normal shadow-sm">已找到0项</span>
+          <span id="results-count" class="text-base bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-full font-normal shadow-sm">已找到 0 项</span>
         </div>
         
-        <!-- 搜索结果列表 -->
+        <!-- 搜索结果列表容器 -->
         <div id="search-results-list" class="space-y-3 overflow-y-auto flex-1 h-full min-h-0">
           <!-- 搜索结果将通过JS动态生成 -->
         </div>
         
         <!-- 未找到结果提示 -->
-        <div id="no-results-message" class="hidden text-center py-10">
-          <p class="text-gray-500">未找到匹配的地址</p>
-        </div>
+      <div id="no-results-message" class="hidden text-center py-10">
+        <p class="text-gray-500 dark:text-gray-400">未找到匹配的地址</p>
+        <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">
+          建议：尝试其他关键词，或检查输入是否正确
+        </p>
+      </div>
       </div>
       
       <!-- 关闭按钮放在右下角 -->
@@ -78,13 +81,13 @@
     </div>
     
     <!-- 自动保存提示 -->
-    <div id="auto-save-indicator" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg text-sm z-50 hidden">
-      <span id="save-status">已自动保存</span>
-    </div>
+  <div id="auto-save-indicator" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 dark:bg-gray-900 dark:bg-opacity-90 text-white px-4 py-2 rounded-lg text-sm z-50 hidden">
+    <span id="save-status">已自动保存</span>
+  </div>
   </main>
   
   <!-- 底部功能区 -->
-  <footer class="bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 flex-none z-10">
+  <footer class="bg-white dark:bg-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 flex-none z-10">
     <div class="flex flex-col space-y-4">
       <!-- 搜索框 -->
       <div class="relative">
@@ -92,60 +95,61 @@
           type="text" 
           id="search-input" 
           placeholder="输入地址首字母搜索（如'bjs'查北京）" 
-          class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none"
+          class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-dark dark:text-gray-100 focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none"
           autocapitalize="off"
           autocorrect="off"
           spellcheck="false"
         >
-        <button id="clear-input-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hidden px-3 py-1 bg-gray-100 rounded-full hover:bg-gray-200">清空</button>
+        <button id="clear-input-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary dark:text-gray-400 hidden px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">清空</button>
       </div>
       
       <!-- 按钮容器 - 将在搜索页面隐藏 -->
       <div id="action-buttons-container">
         <!-- 操作按钮 -->
         <div class="flex items-center flex-wrap gap-2">
-          <div class="flex space-x-1 sm:space-x-2">
-            <button id="file-switch-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors">文件</button>
-            <button id="prev-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors">上一个</button>
-            <button id="next-file-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors">下一个</button>
-            <button id="scroll-top-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors">到最上</button>
-            <button id="scroll-bottom-btn" class="px-4 py-2 rounded-full bg-gray-100 text-dark hover:bg-gray-200 transition-colors">到最下</button>
-          </div>
-          
-          <div class="relative ml-auto">
-            <button id="secondary-menu-btn" class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center">更多</button>
-            <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white shadow-lg rounded-lg p-2 w-40 z-20">
-              <button id="menu-scroll-on-open-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">加载后滚底部：开</button>
-              <button id="menu-password-mode-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">英文键盘模式：关</button>
-              <button id="menu-rename-file-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">重命名</button>
-              <button id="menu-new-file-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">新建</button>
-              <button id="menu-delete-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">删除</button>
-              <button id="menu-save-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">保存</button>
-              <button id="menu-paste-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">粘贴</button>
-              <button id="menu-rename-reset-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">重置文件名</button>
-              <button id="menu-sync-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">同步</button>
-              <button id="menu-load-font-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">加载字体</button>
-              <button id="menu-load-example-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">加载示例</button>
-              <button id="menu-log-panel-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 flex items-center">日志面板</button>
+            <div class="flex space-x-1 sm:space-x-2">
+              <button id="file-switch-btn" class="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">文件</button>
+              <button id="prev-file-btn" class="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">上一个</button>
+              <button id="next-file-btn" class="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">下一个</button>
+              <button id="scroll-top-btn" class="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">到最上</button>
+              <button id="scroll-bottom-btn" class="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">到最下</button>
+            </div>
+            
+            <div class="relative ml-auto">
+              <button id="secondary-menu-btn" class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center">更多</button>
+              <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-2 w-40 z-20">
+                <button id="menu-dark-mode-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">暗色模式：自动</button>
+                <button id="menu-scroll-on-open-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">加载后滚底部：开</button>
+                <button id="menu-password-mode-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">英文键盘模式：关</button>
+                <button id="menu-rename-file-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">重命名</button>
+                <button id="menu-new-file-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">新建</button>
+                <button id="menu-delete-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">删除</button>
+                <button id="menu-save-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">保存</button>
+                <button id="menu-paste-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">粘贴</button>
+                <button id="menu-rename-reset-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">重置文件名</button>
+                <button id="menu-sync-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">同步</button>
+                <button id="menu-load-font-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">加载字体</button>
+                <button id="menu-load-example-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">加载示例</button>
+                <button id="menu-log-panel-btn" class="w-full py-2 px-3 text-sm rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">日志面板</button>
+              </div>
             </div>
           </div>
-        </div>
       </div>
     </div>
   </footer>
   
   <!-- 文件切换弹窗 -->
   <dialog id="file-popup" class="p-0 bg-transparent backdrop:bg-black/50 w-full max-w-md m-auto rounded-lg shadow-xl open:flex flex-col max-h-[80vh]">
-    <div class="bg-white rounded-t-lg flex-grow overflow-auto">
-      <div class="p-4 border-b">
-        <h3 class="text-lg font-medium">选择文件</h3>
+    <div class="bg-white dark:bg-gray-800 rounded-t-lg flex-grow overflow-auto">
+      <div class="p-4 border-b dark:border-gray-700">
+        <h3 class="text-lg font-medium text-dark dark:text-gray-100">选择文件</h3>
       </div>
       <div id="file-list" class="p-4 space-y-2">
-        <!-- 文件列表将通过JS动态生成 -->
+        <!-- 文件列表将通过 JS 动态生成 -->
       </div>
     </div>
-    <div class="bg-white p-4 rounded-b-lg">
-      <button id="close-file-popup" class="w-full py-3 bg-gray-100 text-dark rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-b-lg">
+      <button id="close-file-popup" class="w-full py-3 bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
         取消
       </button>
     </div>
@@ -153,16 +157,16 @@
   
   <!-- 地址编辑弹窗 -->
   <dialog id="edit-popup" class="p-0 bg-transparent backdrop:bg-black/50 w-full max-w-md m-auto rounded-lg shadow-xl open:flex flex-col max-h-[80vh]">
-    <div class="bg-white rounded-lg w-full flex flex-col h-full">
-      <div class="p-4 border-b flex justify-between items-center">
-        <h3 class="text-lg font-medium" id="edit-title">编辑地址</h3>
-        <button id="close-edit-popup" class="text-secondary hover:text-dark">关闭</button>
+    <div class="bg-white dark:bg-gray-800 rounded-lg w-full flex flex-col h-full">
+      <div class="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+        <h3 class="text-lg font-medium text-dark dark:text-gray-100" id="edit-title">编辑地址</h3>
+        <button id="close-edit-popup" class="text-secondary dark:text-gray-400 hover:text-dark dark:hover:text-gray-200">关闭</button>
       </div>
       <div class="p-4 flex-grow overflow-auto">
-        <textarea id="edit-content" class="w-full h-48 p-3 border rounded-lg text-sm resize-none focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none" placeholder="请输入地址和备注，地址请放在第一行，备注放在后续行"></textarea>
+        <textarea id="edit-content" class="w-full h-48 p-3 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-dark dark:text-gray-100 rounded-lg text-sm resize-none focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none" placeholder="请输入地址和备注，地址请放在第一行，备注放在后续行"></textarea>
       </div>
-      <div class="p-4 border-t flex space-x-3">
-        <button id="delete-address-btn" class="flex-1 py-2 bg-gray-100 text-dark rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+      <div class="p-4 border-t dark:border-gray-700 flex space-x-3">
+        <button id="delete-address-btn" class="flex-1 py-2 bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
           删除
         </button>
         <button id="save-address-btn" class="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
@@ -175,7 +179,7 @@
   <!-- 确认弹窗已删除，改用浏览器原生confirm -->
     
   <!-- 提示消息（初始隐藏） -->
-  <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-lg text-sm z-50 hidden">
+  <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 dark:bg-gray-900 dark:bg-opacity-90 text-white px-4 py-2 rounded-lg text-sm z-50 hidden">
     <span id="toast-message"></span>
   </div>
 

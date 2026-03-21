@@ -103,4 +103,13 @@ const server = http.createServer((req, res) => {
 
 server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
+  
+  // 检查 tailwind.css 是否存在
+  const tailwindPath = path.join(publicRoot, 'css', 'tailwind.css');
+  if (!fs.existsSync(tailwindPath)) {
+    console.warn('\x1b[33m%s\x1b[0m', '⚠️  tailwind.css 不存在，请先运行 npm run build');
+    console.warn('\x1b[36m%s\x1b[0m', '💡 提示：开发模式请运行 npm run dev');
+  } else {
+    console.log('\x1b[32m%s\x1b[0m', '✓ Tailwind CSS 已加载');
+  }
 });

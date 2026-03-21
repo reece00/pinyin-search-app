@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
-// 缓存版本标识
-const CACHE_VERSION = 'v1.3.5';
+// 缓存版本标识 (由 build 脚本自动同步 package.json version)
+const CACHE_VERSION = '1.0.0';
 const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 // 在部分 IDE 中，`self` 会被当作 `Window` 类型。通过 `unknown` 中转再断言为 ServiceWorker 作用域。
 const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));

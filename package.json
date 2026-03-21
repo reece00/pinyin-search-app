@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/server.js",
-    "build:css": "tailwindcss -c ./config/tailwind.config.js -i ./config/tailwind-input.css -o ./public/css/tailwind.css --minify --content \"./public/index.html\" \"./public/js/**/*.js\"",
     "dev:css": "tailwindcss -c ./config/tailwind.config.js -i ./config/tailwind-input.css -o ./public/css/tailwind.css --content \"./public/index.html\" \"./public/js/**/*.js\" --watch",
+    "dev": "concurrently \"npm run dev:css\" \"npm start\"",
+    "build:css": "tailwindcss -c ./config/tailwind.config.js -i ./config/tailwind-input.css -o ./public/css/tailwind.css --minify --content \"./public/index.html\" \"./public/js/**/*.js\"",
     "build": "npm run build:css",
     "lint": "eslint \"public/**/*.js\" -c ./config/eslint.config.js",
     "lint:fix": "eslint \"public/**/*.js\" --fix -c ./config/eslint.config.js",
@@ -19,6 +20,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
+    "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-plugin-import": "^2.32.0",
     "playwright": "^1.56.1",

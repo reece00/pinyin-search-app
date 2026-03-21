@@ -7,7 +7,8 @@ const appData = {
   isModified: false,
   autoSaveEnabled: true,
   autoScrollOnOpen: true, // 默认开启加载后自动滚动到底部
-  passwordModeEnabled: false // 默认关闭英文键盘模式
+  passwordModeEnabled: false, // 默认关闭英文键盘模式
+  darkMode: 'system' // 暗色模式：'system' | 'light' | 'dark'
 };
 
 function loadDataFromLocalStorage() {
@@ -25,6 +26,9 @@ function loadDataFromLocalStorage() {
       if (typeof s.passwordModeEnabled === 'boolean') {
         appData.passwordModeEnabled = s.passwordModeEnabled;
       }
+      if (s.darkMode) {
+        appData.darkMode = s.darkMode;
+      }
     } catch {}
   }
 }
@@ -36,7 +40,8 @@ function saveDataToLocalStorage() {
 function saveSettingsToLocalStorage() {
   const settings = {
     autoScrollOnOpen: appData.autoScrollOnOpen,
-    passwordModeEnabled: appData.passwordModeEnabled
+    passwordModeEnabled: appData.passwordModeEnabled,
+    darkMode: appData.darkMode
   };
   localStorage.setItem('addressBookSettings', JSON.stringify(settings));
 }
@@ -51,10 +56,48 @@ function saveCurrentFile(elements) {
   appData.isModified = false;
 }
 
+function applyDarkMode(mode) {
+  if (mode === 'dark') {
+    document.documentElement.classList.add('dark');
+  } else if (mode === 'light') {
+    document.documentElement.classList.remove('dark');
+  } else {
+    // system
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }
+}
+
+function initDarkMode() {
+  const saved = appData.darkMode || 'system';
+  applyDarkMode(saved);
+  
+  // 监听系统偏好变化
+  if (window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      if (appData.darkMode === 'system') {
+        applyDarkMode('system');
+      }
+    });
+  }
+}
+
+function setDarkMode(mode) {
+  appData.darkMode = mode;
+  saveSettingsToLocalStorage();
+  applyDarkMode(mode);
+}
+
 export {
   appData,
   loadDataFromLocalStorage,
   saveDataToLocalStorage,
   saveSettingsToLocalStorage,
-  saveCurrentFile
+  saveCurrentFile,
+  applyDarkMode,
+  initDarkMode,
+  setDarkMode
 };

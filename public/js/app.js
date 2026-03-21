@@ -1,5 +1,5 @@
 // 导入各模块
-import { appData, loadDataFromLocalStorage, saveCurrentFile, saveSettingsToLocalStorage } from './app-data.js';
+import { appData, loadDataFromLocalStorage, saveCurrentFile, saveSettingsToLocalStorage, initDarkMode, setDarkMode } from './app-data.js';
 import { files, search } from './features.js';
 import { 
   showToast, initErrorMonitor, openClientLogOverlay
@@ -195,6 +195,30 @@ function setupEditorSwipe() {
     });
   }
 
+  // 暗色模式切换
+  if (elements.menuDarkModeBtn && elements.secondaryMenu) {
+    const darkModeLabels = {
+      system: '自动',
+      light: '浅色',
+      dark: '深色'
+    };
+    
+    const updateDarkModeLabel = () => {
+      elements.menuDarkModeBtn.textContent = `暗色模式：${darkModeLabels[appData.darkMode]}`;
+    };
+    
+    updateDarkModeLabel();
+    
+    elements.menuDarkModeBtn.addEventListener('click', () => {
+      const modes = ['system', 'light', 'dark'];
+      const currentIndex = modes.indexOf(appData.darkMode);
+      const nextMode = modes[(currentIndex + 1) % modes.length];
+      setDarkMode(nextMode);
+      updateDarkModeLabel();
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+
   if (elements.menuRenameFileBtn && elements.secondaryMenu) {
     elements.menuRenameFileBtn.addEventListener('click', () => {
       files.handleRenameFile(elements);
@@ -317,6 +341,7 @@ function initApp() {
     menuLogPanelBtn: document.getElementById('menu-log-panel-btn'),
     menuLoadFontBtn: document.getElementById('menu-load-font-btn'),
     menuLoadExampleBtn: document.getElementById('menu-load-example-btn'),
+    menuDarkModeBtn: document.getElementById('menu-dark-mode-btn'),
     searchInput: document.getElementById('search-input'),
     clearInputBtn: document.getElementById('clear-input-btn'),
     toastMessage: document.getElementById('toast'),
@@ -335,6 +360,9 @@ function initApp() {
   
   // 加载数据
   loadDataFromLocalStorage();
+  
+  // 初始化暗色模式
+  initDarkMode();
   
   // 渲染文件列表
   files.renderFileList(elements);

@@ -201,14 +201,6 @@ function initErrorMonitor(options = {}) {
   }
 }
 
-export {
-  showToast,
-  showAutoSaveIndicator,
-  setupOutsideClickHandler,
-  initPWA,
-  initErrorMonitor
-}
-
 function openClientLogOverlay() {
   if (document.getElementById('client-log-overlay')) return;
   const wrap = document.createElement('div');
@@ -299,4 +291,11 @@ function openClientLogOverlay() {
   render();
 }
 
-export { openClientLogOverlay };
+export {
+  showToast,
+  showAutoSaveIndicator,
+  setupOutsideClickHandler,
+  initPWA,
+  initErrorMonitor,
+  openClientLogOverlay
+};
