@@ -8,7 +8,8 @@ const appData = {
   autoSaveEnabled: true,
   autoScrollOnOpen: true, // 默认开启加载后自动滚动到底部
   passwordModeEnabled: false, // 默认关闭英文键盘模式
-  darkMode: 'system' // 暗色模式：'system' | 'light' | 'dark'
+  darkMode: 'system', // 暗色模式：'system' | 'light' | 'dark'
+  autoExitMinutes: 1 // 默认 1 分钟后台自动退出
 };
 
 function loadDataFromLocalStorage() {
@@ -29,6 +30,9 @@ function loadDataFromLocalStorage() {
       if (s.darkMode) {
         appData.darkMode = s.darkMode;
       }
+      if (typeof s.autoExitMinutes === 'number') {
+        appData.autoExitMinutes = s.autoExitMinutes;
+      }
     } catch {}
   }
 }
@@ -41,7 +45,8 @@ function saveSettingsToLocalStorage() {
   const settings = {
     autoScrollOnOpen: appData.autoScrollOnOpen,
     passwordModeEnabled: appData.passwordModeEnabled,
-    darkMode: appData.darkMode
+    darkMode: appData.darkMode,
+    autoExitMinutes: appData.autoExitMinutes
   };
   localStorage.setItem('addressBookSettings', JSON.stringify(settings));
 }

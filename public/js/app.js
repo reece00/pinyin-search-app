@@ -1,7 +1,7 @@
 // 导入各模块
 import { appData, loadDataFromLocalStorage, saveCurrentFile, saveSettingsToLocalStorage, initDarkMode, setDarkMode } from './app-data.js';
 import { files, search } from './features.js';
-import { 
+import {
   showToast, initErrorMonitor, openClientLogOverlay
 } from './ui-utils.js';
 
@@ -9,6 +9,8 @@ import {
 let elements = {};
 // 存储外部点击事件处理函数引用，用于正确移除监听器
 let outsideClickHandler = null;
+// 自动退出定时器
+let autoExitTimer = null;
 
 // 处理编辑器输入
 function handleEditorInput() {
@@ -18,7 +20,7 @@ function handleEditorInput() {
     if (appData.autoSaveTimer) {
       clearTimeout(appData.autoSaveTimer);
     }
-  
+
   appData.autoSaveTimer = setTimeout(() => {
     saveCurrentFile(elements);
       if (elements && elements.autoSaveIndicator) {
@@ -36,9 +38,16 @@ function handleEditorInput() {
       }
   }, 1000); // 1秒后自动保存
   }
-  
+
   // 记录编辑器状态
   appData.isModified = true;
+}
+
+// 统一退出逻辑
+function handleExit() {
+  console.log('执行退出程序...');
+  saveCurrentFile(elements);
+  window.close();
 }
 
 function getFileOrder() {
@@ -203,7 +212,7 @@ function setupEditorSwipe() {
     };
     // 初始状态更新
     updatePasswordMode();
-    
+
     elements.menuPasswordModeBtn.addEventListener('click', () => {
       appData.passwordModeEnabled = !appData.passwordModeEnabled;
       saveSettingsToLocalStorage();
@@ -219,13 +228,13 @@ function setupEditorSwipe() {
       light: '浅色',
       dark: '深色'
     };
-    
+
     const updateDarkModeLabel = () => {
       elements.menuDarkModeBtn.textContent = `暗色模式：${darkModeLabels[appData.darkMode]}`;
     };
-    
+
     updateDarkModeLabel();
-    
+
     elements.menuDarkModeBtn.addEventListener('click', () => {
       const modes = ['system', 'light', 'dark'];
       const currentIndex = modes.indexOf(appData.darkMode);
@@ -233,6 +242,40 @@ function setupEditorSwipe() {
       setDarkMode(nextMode);
       updateDarkModeLabel();
       elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+
+  // 自动退出时间设置
+  if (elements.menuAutoExitBtn && elements.secondaryMenu) {
+    const updateAutoExitLabel = () => {
+      const mins = appData.autoExitMinutes;
+      elements.menuAutoExitBtn.textContent = `自动退出：${mins > 0 ? mins + '分钟' : '已禁用'}`;
+    };
+
+    updateAutoExitLabel();
+
+    elements.menuAutoExitBtn.addEventListener('click', () => {
+      const input = prompt('请输入后台自动退出时间（分钟，0表示禁用）:', String(appData.autoExitMinutes));
+      if (input !== null) {
+        const val = parseInt(input);
+        if (!isNaN(val) && val >= 0) {
+          appData.autoExitMinutes = val;
+          saveSettingsToLocalStorage();
+          updateAutoExitLabel();
+          showToast(`已设置为 ${val > 0 ? val + ' 分钟' : '禁用'} 后自动退出`, elements);
+        } else {
+          showToast('请输入有效的数字', elements);
+        }
+      }
+      elements.secondaryMenu.classList.add('hidden');
+    });
+  }
+
+  // 直接退出
+  if (elements.menuExitBtn && elements.secondaryMenu) {
+    elements.menuExitBtn.addEventListener('click', () => {
+      elements.secondaryMenu.classList.add('hidden');
+      handleExit();
     });
   }
 
@@ -303,11 +346,11 @@ function setupEditorSwipe() {
   elements.searchInput.addEventListener('input', () => search.handleSearchInput(elements));
   elements.searchInput.addEventListener('focus', () => search.handleSearchFocus(elements));
   elements.clearInputBtn.addEventListener('click', () => search.clearSearchInput(elements));
-  
+
   elements.memoEditor.addEventListener('input', handleEditorInput);
-  
+
   elements.closeSearchResultsButton.addEventListener('click', () => search.clearSearchInput(elements));
-  
+
   // 点击弹窗背景（backdrop）时关闭弹窗
   elements.filePopup.addEventListener('click', (e) => {
     if (e.target === elements.filePopup) {
@@ -323,7 +366,7 @@ function setupEditorSwipe() {
 function initApp() {
   initErrorMonitor({ overlay: true, levels: ['error','warn','log','info','debug'], trigger: 'menu' });
   console.log('正在初始化应用...');
-  
+
   // 获取 DOM 元素引用
   elements = {
     memoEditor: document.getElementById('memo-editor'),
@@ -352,6 +395,8 @@ function initApp() {
     menuLoadFontBtn: document.getElementById('menu-load-font-btn'),
     menuLoadExampleBtn: document.getElementById('menu-load-example-btn'),
     menuDarkModeBtn: document.getElementById('menu-dark-mode-btn'),
+    menuAutoExitBtn: document.getElementById('menu-auto-exit-btn'),
+    menuExitBtn: document.getElementById('menu-exit-btn'),
     searchInput: document.getElementById('search-input'),
     clearInputBtn: document.getElementById('clear-input-btn'),
     toastMessage: document.getElementById('toast'),
@@ -365,18 +410,18 @@ function initApp() {
     autoSaveIndicator: document.getElementById('auto-save-indicator'),
     actionButtonsContainer: document.getElementById('action-buttons-container'),
     filenameDisplay: document.getElementById('filename-display'),
-    
+
   };
-  
+
   // 加载数据
   loadDataFromLocalStorage();
-  
+
   // 初始化暗色模式
   initDarkMode();
-  
+
   // 渲染文件列表
   files.renderFileList(elements);
-  
+
   // 打开最后编辑的文件；如果没有则打开第一个文件；如果没有任何文件则新建
   const fileKeys = Object.keys(appData.files);
   if (appData.currentFile && appData.files[appData.currentFile]) {
@@ -387,17 +432,40 @@ function initApp() {
     // 如果没有任何文件，则加载示例数据
     files.handleLoadExample(elements);
   }
-  
+
   // 绑定事件
   bindEvents();
-  
-  // 初始化 PWA 注册与安装提示（仅在 PWA 安装形态注册 SW）
+
+  // 检测是否为 PWA 安装形态
   const isPWAInstalled = (() => {
     const isStandalone = typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches;
     const isIOSStandalone = typeof navigator !== 'undefined' && /** @type {any} */(navigator).standalone === true;
     return !!(isStandalone || isIOSStandalone);
   })();
 
+  // 后台自动退出监听（仅在 PWA 模式下执行）
+  if (isPWAInstalled) {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        const mins = appData.autoExitMinutes;
+        if (mins > 0) {
+          console.log(`应用进入后台，将在 ${mins} 分钟后退出`);
+          autoExitTimer = setTimeout(() => {
+            console.log('自动退出定时器触发');
+            handleExit();
+          }, mins * 60 * 1000);
+        }
+      } else {
+        if (autoExitTimer) {
+          console.log('应用回到前台，清除自动退出定时器');
+          clearTimeout(autoExitTimer);
+          autoExitTimer = null;
+        }
+      }
+    });
+  }
+
+  // 初始化 PWA 注册与安装提示（仅在 PWA 安装形态注册 SW）
   const isSecure = typeof window !== 'undefined' && !!window.isSecureContext;
   if (isPWAInstalled && 'serviceWorker' in navigator && isSecure) {
     const registerSW = () => {
@@ -423,7 +491,7 @@ function initApp() {
       window.addEventListener('load', registerSW)
     }
   }
-  
+
   console.log('应用初始化完成');
 }
 
