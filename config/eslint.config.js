@@ -3,7 +3,7 @@ import pluginImport from 'eslint-plugin-import';
 
 export default [
   {
-    ignores: ['node_modules/**', 'public/js/pinyin-pro.js', 'public/**/*.min.js']
+    ignores: ['node_modules/**', 'config/**', 'public/js/pinyin-pro.js', 'public/**/*.min.js']
   },
   {
     files: ['public/**/*.js'],
