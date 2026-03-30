@@ -8,11 +8,13 @@ const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self
 
 // 安装事件 - 取消预加载，仅跳过等待
 self.addEventListener('install', /** @param {ExtendableEvent} event */ (event) => {
+  console.log(`Service Worker 正在安装版本: ${CACHE_VERSION}`);
   event.waitUntil(sw.skipWaiting());
 });
 
 // 激活事件 - 清理旧缓存
 self.addEventListener('activate', /** @param {ExtendableEvent} event */ (event) => {
+  console.log(`Service Worker 正在激活版本: ${CACHE_VERSION}`);
   const cacheWhitelist = [CACHE_NAME];
 
   event.waitUntil(
@@ -101,6 +103,7 @@ self.addEventListener('fetch', /** @param {FetchEvent} event */ (event) => {
 self.addEventListener('message', /** @param {ExtendableMessageEvent} event */ (event) => {
   // 处理来自客户端的消息
   if (event.data && event.data.type === 'SKIP_WAITING') { // 版本切换消息约定
+    console.log('Service Worker 接收到 SKIP_WAITING 消息');
     sw.skipWaiting();
   }
 

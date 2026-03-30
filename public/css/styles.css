@@ -289,3 +289,27 @@ input[type="password"]:focus {
 .log-btn:hover {
   opacity: 0.8;
 }
+
+/* 左上角微型提示 */
+#mini-toast {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  z-index: 10001;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.dark #mini-toast {
+  background-color: rgba(31, 41, 55, 0.8);
+}
+
+#mini-toast.hidden {
+  display: none;
+}

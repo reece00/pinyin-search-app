@@ -240,8 +240,44 @@ function toggleVisibility(element, isVisible) {
   }
 }
 
+/**
+ * 在左上角显示微型提示（用于非阻塞的背景任务状态）
+ * @param {string} message 
+ * @param {number} duration 
+ */
+function showMiniToast(message, duration = 3000) {
+  let el = document.getElementById('mini-toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'mini-toast';
+    el.className = 'hidden opacity-0';
+    document.body.appendChild(el);
+  }
+
+  el.textContent = message;
+  el.classList.remove('hidden');
+  
+  // 强制重绘
+  el.offsetHeight;
+  
+  el.classList.remove('opacity-0');
+  el.classList.add('opacity-100');
+  
+  // 清除之前的定时器
+  if (el._timer) clearTimeout(el._timer);
+  
+  el._timer = setTimeout(() => {
+    el.classList.remove('opacity-100');
+    el.classList.add('opacity-0');
+    setTimeout(() => {
+      el.classList.add('hidden');
+    }, 300);
+  }, duration);
+}
+
 export {
   showToast,
+  showMiniToast,
   initErrorMonitor,
   openClientLogOverlay,
   trace,
