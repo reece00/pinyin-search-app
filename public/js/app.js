@@ -50,7 +50,10 @@ function handleEditorInput() {
 function handleExit() {
   console.log('执行重置程序...');
   saveCurrentFile(elements);
-  window.location.replace('./');
+  if (elements.secondaryMenu) {
+    elements.secondaryMenu.classList.add('hidden');
+  }
+  window.location.reload();
 }
 
 function getFileOrder() {

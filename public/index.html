@@ -202,27 +202,6 @@
     </div>
   </dialog>
   
-  <!-- 地址编辑弹窗 -->
-  <dialog id="edit-popup" class="p-0 bg-transparent backdrop:bg-black/50 w-full max-w-md m-auto rounded-lg shadow-xl open:flex flex-col max-h-[80vh]">
-    <div class="bg-white dark:bg-gray-800 rounded-lg w-full flex flex-col h-full">
-      <div class="p-4 border-b dark:border-gray-700 flex justify-between items-center">
-        <h3 class="text-lg font-medium text-dark dark:text-gray-100" id="edit-title">编辑地址</h3>
-        <button id="close-edit-popup" class="text-secondary dark:text-gray-400 hover:text-dark dark:hover:text-gray-200">关闭</button>
-      </div>
-      <div class="p-4 flex-grow overflow-auto">
-        <textarea id="edit-content" class="w-full h-48 p-3 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-700 text-dark dark:text-gray-100 rounded-lg text-sm resize-none focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none" placeholder="请输入地址和备注，地址请放在第一行，备注放在后续行"></textarea>
-      </div>
-      <div class="p-4 border-t dark:border-gray-700 flex space-x-3">
-        <button id="delete-address-btn" class="flex-1 py-2 bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-          删除
-        </button>
-        <button id="save-address-btn" class="flex-1 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors">
-          保存
-        </button>
-      </div>
-    </div>
-  </dialog>
-  
   <!-- 提示消息（初始隐藏） -->
   <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 dark:bg-gray-900 dark:bg-opacity-90 text-white px-4 py-2 rounded-lg text-sm z-50 hidden">
     <span id="toast-message"></span>
