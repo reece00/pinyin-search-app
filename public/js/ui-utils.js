@@ -197,8 +197,54 @@ function openClientLogOverlay() {
   render();
 }
 
+function trace(module, action, data, options = {}) {
+  const level = options.level || 'log';
+  const traceId = options.traceId || `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  const logger = typeof console[level] === 'function' ? console[level].bind(console) : console.log.bind(console);
+  logger(`[TRACE][${traceId}][${module}] ${action}`, data);
+  return traceId;
+}
+
+/**
+ * 监听元素外部点击
+ * @param {HTMLElement} element 目标元素
+ * @param {Function} callback 点击外部时的回调
+ * @returns {Function} 用于移除监听器的卸载函数
+ */
+function onClickOutside(element, callback) {
+  const handler = (event) => {
+    if (element && !element.contains(event.target)) {
+      callback(event);
+    }
+  };
+  
+  // 延迟绑定，避免触发本次点击
+  setTimeout(() => {
+    document.addEventListener('click', handler);
+  }, 0);
+  
+  return () => document.removeEventListener('click', handler);
+}
+
+/**
+ * 切换元素可见性
+ * @param {HTMLElement} element 
+ * @param {boolean} isVisible 
+ */
+function toggleVisibility(element, isVisible) {
+  if (!element) return;
+  if (isVisible) {
+    element.classList.remove('hidden');
+  } else {
+    element.classList.add('hidden');
+  }
+}
+
 export {
   showToast,
   initErrorMonitor,
-  openClientLogOverlay
+  openClientLogOverlay,
+  trace,
+  onClickOutside,
+  toggleVisibility
 };

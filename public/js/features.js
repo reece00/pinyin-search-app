@@ -1,5 +1,5 @@
-import { appData, saveDataToLocalStorage } from './app-data.js'
-import { showToast } from './ui-utils.js'
+import { appData, updateState, saveDataToLocalStorage } from './app-data.js'
+import { showToast, trace } from './ui-utils.js'
 
 function createNewFile(elements) {
   const timestamp = new Date().getTime()
@@ -14,42 +14,48 @@ function createNewFile(elements) {
     }
   }
   const defaultName = `新备忘录${maxNumber + 1}`
-  appData.files[defaultName] = { content: '', lastModified: timestamp }
-  saveDataToLocalStorage()
+  const newFiles = { ...appData.files };
+  newFiles[defaultName] = { content: '', lastModified: timestamp };
+  updateState({ files: newFiles }, { saveData: true });
   openFile(defaultName, elements)
   showToast('新文件已创建', elements)
 }
 
 function openFile(filename, elements) {
   if (!appData.files[filename]) return
-  if (appData.currentFile && appData.isModified) {
-    if (confirm('当前文件有未保存的更改，是否继续？')) {
-      appData.files[filename].lastModified = new Date().getTime()
-      if (elements && elements.memoEditor) {
-        elements.memoEditor.value = appData.files[filename].content || ''
-        if (appData.autoScrollOnOpen) {
-          requestAnimationFrame(() => { elements.memoEditor.scrollTop = elements.memoEditor.scrollHeight })
-        }
-      }
-      appData.currentFile = filename
-      appData.isModified = false
-      if (elements && elements.filenameDisplay) {
-        elements.filenameDisplay.textContent = filename
-      }
-    }
-  } else {
-    appData.files[filename].lastModified = new Date().getTime()
+
+  const doOpen = () => {
+    const newFiles = { ...appData.files };
+    newFiles[filename].lastModified = new Date().getTime();
+
     if (elements && elements.memoEditor) {
-      elements.memoEditor.value = appData.files[filename].content || ''
-      if (appData.autoScrollOnOpen) {
-        requestAnimationFrame(() => { elements.memoEditor.scrollTop = elements.memoEditor.scrollHeight })
+      const editor = elements.memoEditor
+      const content = newFiles[filename].content || ''
+      editor.value = content
+
+      if (appData.autoScrollOnOpen && content) {
+        editor.scrollTop = 1e9
+      } else {
+        editor.scrollTop = 0
       }
     }
-    appData.currentFile = filename
-    appData.isModified = false
+    updateState({
+      files: newFiles,
+      currentFile: filename,
+      isModified: false
+    }, { saveData: true });
+
     if (elements && elements.filenameDisplay) {
       elements.filenameDisplay.textContent = filename
     }
+  }
+
+  if (appData.currentFile && appData.isModified) {
+    if (confirm('当前文件有未保存的更改，是否继续？')) {
+      doOpen()
+    }
+  } else {
+    doOpen()
   }
 }
 
@@ -70,9 +76,11 @@ function handleDeleteFile(filename, elements) {
       return
     }
     if (confirm(`删除"${filename}"后，所有内容将丢失`)) {
-      delete appData.files[filename]
-      saveDataToLocalStorage()
-      const recentFiles = Object.keys(appData.files).sort((a, b) => appData.files[b].lastModified - appData.files[a].lastModified)
+      const newFiles = { ...appData.files }
+      delete newFiles[filename]
+      updateState({ files: newFiles }, { saveData: true })
+
+      const recentFiles = Object.keys(newFiles).sort((a, b) => newFiles[b].lastModified - newFiles[a].lastModified)
       if (recentFiles.length > 0) {
         openFile(recentFiles[0], elements)
       } else {
@@ -83,8 +91,9 @@ function handleDeleteFile(filename, elements) {
     }
   } else {
     if (confirm(`删除"${filename}"后，所有内容将丢失`)) {
-      delete appData.files[filename]
-      saveDataToLocalStorage()
+      const newFiles = { ...appData.files }
+      delete newFiles[filename]
+      updateState({ files: newFiles }, { saveData: true })
       renderFileList(elements)
       showToast('文件已删除', elements)
     }
@@ -104,20 +113,26 @@ function handleRenameFile(elements) {
     return
   }
   if (trimmedName === appData.currentFile) return
-  if (appData.files[trimmedName]) {
+
+  const newFiles = { ...appData.files }
+  if (newFiles[trimmedName]) {
     if (confirm('文件名已存在，是否覆盖该文件的内容？')) {
-      appData.files[trimmedName] = appData.files[appData.currentFile]
-      delete appData.files[appData.currentFile]
-      appData.currentFile = trimmedName
-      saveDataToLocalStorage()
+      newFiles[trimmedName] = newFiles[appData.currentFile]
+      delete newFiles[appData.currentFile]
+      updateState({
+        files: newFiles,
+        currentFile: trimmedName
+      }, { saveData: true })
       showToast('文件已重命名（已覆盖）', elements)
     }
     return
   }
-  appData.files[trimmedName] = appData.files[appData.currentFile]
-  delete appData.files[appData.currentFile]
-  appData.currentFile = trimmedName
-  saveDataToLocalStorage()
+  newFiles[trimmedName] = newFiles[appData.currentFile]
+  delete newFiles[appData.currentFile]
+  updateState({
+    files: newFiles,
+    currentFile: trimmedName
+  }, { saveData: true })
   showToast('文件已重命名', elements)
 }
 
@@ -141,20 +156,26 @@ function handleResetFilename(elements) {
     showToast('第一行文本过长（超过 20 字符），无法作为文件名', elements)
     return
   }
-  if (appData.files[firstLine]) {
+
+  const newFiles = { ...appData.files }
+  if (newFiles[firstLine]) {
     if (confirm('文件名已存在，是否覆盖该文件的内容？')) {
-      appData.files[firstLine] = appData.files[appData.currentFile]
-      delete appData.files[appData.currentFile]
-      appData.currentFile = firstLine
-      saveDataToLocalStorage()
+      newFiles[firstLine] = newFiles[appData.currentFile]
+      delete newFiles[appData.currentFile]
+      updateState({
+        files: newFiles,
+        currentFile: firstLine
+      }, { saveData: true })
       showToast('文件名已重置（已覆盖）', elements)
     }
     return
   }
-  appData.files[firstLine] = appData.files[appData.currentFile]
-  delete appData.files[appData.currentFile]
-  appData.currentFile = firstLine
-  saveDataToLocalStorage()
+  newFiles[firstLine] = newFiles[appData.currentFile]
+  delete newFiles[appData.currentFile]
+  updateState({
+    files: newFiles,
+    currentFile: firstLine
+  }, { saveData: true })
   showToast('文件名已重置为第一行文本', elements)
 }
 
@@ -190,8 +211,8 @@ function renderFileList(elements) {
     const fileItem = document.createElement('div')
     fileItem.className = `p-3 rounded-lg flex justify-between items-center ${appData.currentFile === filename ? 'bg-blue-50 dark:bg-blue-900/30 text-primary' : 'hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer'}`
     if (appData.currentFile !== filename) {
-      fileItem.addEventListener('click', () => {
-        openFile(filename, elements)
+      fileItem.addEventListener('click', async () => {
+        await openFile(filename, elements)
         closeFilePopup(elements)
       })
     }
@@ -224,31 +245,47 @@ function renderFileList(elements) {
 }
 
 function isPinyinReady() {
-  const lib = globalThis.pinyinPro
-  return !!(lib && typeof lib.pinyin === 'function')
+  return !!pinyinLib
 }
 
 let pinyinProLoadPromise = null
 let firstSearchScheduled = false
+let pretextLib = null
+let pinyinLib = null
 
-function loadPinyinPro() {
+async function loadPretext() {
+  if (pretextLib) return pretextLib
+  try {
+    // 改为本地引入，解决网络错误并提升稳定性
+    const mod = await import('./pretext/layout.js')
+    pretextLib = mod
+    return pretextLib
+  } catch (e) {
+    console.error('Failed to load pretext locally, falling back to basic scroll', e)
+    return null
+  }
+}
+
+async function loadPinyinPro() {
   if (pinyinProLoadPromise) return pinyinProLoadPromise
-  pinyinProLoadPromise = new Promise((resolve, reject) => {
-    const script = document.createElement('script')
-    script.src = 'js/pinyin-pro.js'
-    script.async = true
-    script.onload = () => resolve(globalThis.pinyinPro)
-    script.onerror = () => reject(new Error('pinyin-pro load error'))
-    document.head.appendChild(script)
-  })
+  pinyinProLoadPromise = (async () => {
+    try {
+      const mod = await import('./pinyin-pro-mod.js')
+      pinyinLib = mod
+      return pinyinLib
+    } catch (e) {
+      console.error('pinyin-pro load error:', e)
+      throw e
+    }
+  })()
   return pinyinProLoadPromise
 }
 
 function parseAddressContent(content) {
   if (!content) return []
-  const addressBlocks = content.split(/\n{2,}/).filter(block => block.trim())
+  const addressBlocks = content.split(/\r?\n\r?\n+/).filter(block => block.trim())
   return addressBlocks.map(block => {
-    const lines = block.split('\n').filter(line => line.trim())
+    const lines = block.split(/\r?\n/).filter(line => line.trim())
     if (lines.length === 0) return null
     const address = lines[0].trim()
     const notes = lines.slice(1).join('\n').trim()
@@ -261,9 +298,8 @@ function generatePinyinIndex(address) {
   if (!address) return ''
   const chineseChars = address.replace(/[^\u4e00-\u9fa5]/g, '')
   if (!chineseChars) return ''
-  const lib = globalThis.pinyinPro
-  const pinyin = lib && typeof lib.pinyin === 'function'
-    ? lib.pinyin(chineseChars, { pattern: 'first', type: 'array', toneType: 'none', v: true })
+  const pinyin = pinyinLib && typeof pinyinLib.pinyin === 'function'
+    ? pinyinLib.pinyin(chineseChars, { pattern: 'first', type: 'array', toneType: 'none', v: true })
     : []
   return Array.isArray(pinyin) ? pinyin.join('').toLowerCase() : (typeof pinyin === 'string' ? pinyin.toLowerCase() : '')
 }
@@ -313,6 +349,85 @@ function searchAddresses(addresses, query) {
   })
 }
 
+function buildHighlightFragment(text, query) {
+  const frag = document.createDocumentFragment()
+  if (!text) { frag.appendChild(document.createTextNode('')); return frag }
+  if (!query) { frag.appendChild(document.createTextNode(text)); return frag }
+
+  const lowerQuery = query.toLowerCase()
+  const lowerText = text.toLowerCase()
+
+  // 1. 直接匹配高亮逻辑
+  if (lowerText.includes(lowerQuery)) {
+    let last = 0
+    let matchPos = 0
+    while ((matchPos = lowerText.indexOf(lowerQuery, last)) !== -1) {
+      if (matchPos > last) {
+        frag.appendChild(document.createTextNode(text.substring(last, matchPos)))
+      }
+      const span = document.createElement('span')
+      span.className = 'highlight'
+      span.textContent = text.substring(matchPos, matchPos + lowerQuery.length)
+      frag.appendChild(span)
+      last = matchPos + lowerQuery.length
+    }
+    if (last < text.length) {
+      frag.appendChild(document.createTextNode(text.substring(last)))
+    }
+    return frag
+  }
+
+  // 2. 词组或拼音匹配逻辑
+  const words = splitAddressIntoWords(text).filter(w => w && w !== text)
+  const ranges = []
+  words.forEach(word => {
+    const lowerWord = word.toLowerCase()
+    const wordPinyin = generatePinyinIndex(word)
+    if (lowerWord.includes(lowerQuery) || wordPinyin.includes(lowerQuery)) {
+      // 在文本中寻找该词的所有出现位置
+      let last = 0
+      let matchPos = 0
+      while ((matchPos = text.indexOf(word, last)) !== -1) {
+        ranges.push([matchPos, matchPos + word.length])
+        last = matchPos + word.length
+      }
+    }
+  })
+
+  // 合并重叠区间并排序
+  if (ranges.length === 0) {
+    frag.appendChild(document.createTextNode(text))
+    return frag
+  }
+
+  ranges.sort((a, b) => a[0] - b[0])
+  const merged = []
+  for (const r of ranges) {
+    if (!merged.length || r[0] > merged[merged.length - 1][1]) {
+      merged.push(r)
+    } else {
+      merged[merged.length - 1][1] = Math.max(merged[merged.length - 1][1], r[1])
+    }
+  }
+
+  // 根据区间构建 DOM
+  let pos = 0
+  for (const [start, end] of merged) {
+    if (start > pos) {
+      frag.appendChild(document.createTextNode(text.substring(pos, start)))
+    }
+    const span = document.createElement('span')
+    span.className = 'highlight'
+    span.textContent = text.substring(start, end)
+    frag.appendChild(span)
+    pos = end
+  }
+  if (pos < text.length) {
+    frag.appendChild(document.createTextNode(text.substring(pos)))
+  }
+  return frag
+}
+
 function renderSearchResults(results, elements) {
   elements.searchResultsList.innerHTML = ''
   const query = appData.searchQuery
@@ -322,7 +437,7 @@ function renderSearchResults(results, elements) {
     resultItem.className = 'p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700'
     const addressTitle = document.createElement('h3')
     addressTitle.className = 'text-base font-medium text-dark dark:text-gray-100'
-    addressTitle.innerHTML = highlightMatchingText(item.address, query)
+    addressTitle.appendChild(buildHighlightFragment(item.address, query))
     const notesContent = document.createElement('div')
     notesContent.className = 'text-sm text-gray-600 dark:text-gray-400 mt-2'
     if (item.notes) {
@@ -331,7 +446,7 @@ function renderSearchResults(results, elements) {
         if (index < 3) {
           const noteLine = document.createElement('p')
           noteLine.className = 'mb-1'
-          noteLine.innerHTML = highlightMatchingText(line, query)
+          noteLine.appendChild(buildHighlightFragment(line, query))
           notesContent.appendChild(noteLine)
         } else if (index === 3) {
           const moreNote = document.createElement('p')
@@ -343,52 +458,16 @@ function renderSearchResults(results, elements) {
     }
     resultItem.appendChild(addressTitle)
     resultItem.appendChild(notesContent)
-    resultItem.addEventListener('click', () => {
+    resultItem.addEventListener('click', async () => {
       if (item.sourceFile) {
         openFile(item.sourceFile, elements)
-         showEditorPage(elements)
-         elements.memoEditor.focus()
-         scrollToAddress(item.address, elements)
+        showEditorPage(elements)
+        elements.memoEditor.focus()
+        await scrollToAddress(item.address, elements)
       }
     })
     elements.searchResultsList.appendChild(resultItem)
   })
-}
-
-function highlightMatchingText(text, query) {
-  if (!query || !text) return text
-  const lowerQuery = query.toLowerCase()
-  const lowerText = text.toLowerCase()
-  if (lowerText.includes(lowerQuery)) {
-    let result = ''
-    let lastIndex = 0
-    let matchPos = 0
-    while ((matchPos = lowerText.indexOf(lowerQuery, lastIndex)) !== -1) {
-      result += text.substring(lastIndex, matchPos)
-      result += `<span class="highlight">${text.substring(matchPos, matchPos + lowerQuery.length)}</span>`
-      lastIndex = matchPos + lowerQuery.length
-    }
-    result += text.substring(lastIndex)
-    return result
-  }
-  let words = splitAddressIntoWords(text)
-  words = words.filter(word => word !== text)
-  let highlightedText = text
-  let hasMatch = false
-  const wrapWithHighlight = (match) => { hasMatch = true; return `<span class="highlight">${match}</span>` }
-  words.forEach(word => {
-    const lowerWord = word.toLowerCase()
-    const wordPinyin = generatePinyinIndex(word)
-    if (lowerWord.includes(lowerQuery)) {
-      highlightedText = highlightedText.replace(word, wrapWithHighlight(word))
-    } else if (wordPinyin.includes(lowerQuery)) {
-      const idx = highlightedText.indexOf(word)
-      if (idx !== -1) {
-        highlightedText = highlightedText.substring(0, idx) + wrapWithHighlight(word) + highlightedText.substring(idx + word.length)
-      }
-    }
-  })
-  return hasMatch ? highlightedText : text
 }
 
 function showSearchResultsPage(results, elements) {
@@ -406,31 +485,69 @@ function showEditorPage(elements) {
   if (elements.searchResultsCloseContainer) { elements.searchResultsCloseContainer.classList.add('hidden') }
 }
 
-function scrollToAddress(address, elements) {
-  const content = appData.files[appData.currentFile]?.content || ''
-  if (!content || !address) return
+async function scrollToAddress(address, elements) {
+  const editor = elements.memoEditor
+  if (!editor || !address) return
+
+  const content = editor.value
   const lines = content.split('\n')
-  let targetLine = -1
+  let targetLogicalLine = -1
+  let charIndex = 0
+
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes(address)) {
-      targetLine = i
+    const indexInLine = lines[i].indexOf(address)
+    if (indexInLine !== -1) {
+      targetLogicalLine = i
+      charIndex += indexInLine
       break
     }
+    charIndex += lines[i].length + 1
   }
-  if (targetLine !== -1 && elements.memoEditor) {
-    const totalLines = lines.length
-    const lineHeight = elements.memoEditor.scrollHeight / totalLines
-    const targetScrollTop = lineHeight * targetLine
-    elements.memoEditor.scrollTop = targetScrollTop
+
+  if (targetLogicalLine !== -1) {
+    const style = window.getComputedStyle(editor)
+    const fontSize = parseFloat(style.fontSize)
+    const fontFamily = style.fontFamily
+    const fontWeight = style.fontWeight
+    const font = `${fontWeight} ${fontSize}px ${fontFamily}`
+    const width = editor.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+    const paddingTop = parseFloat(style.paddingTop)
+
+    let lineHeight = parseFloat(style.lineHeight)
+    if (isNaN(lineHeight)) {
+      // 这里的 1.5 需要与 styles.css 中的保持一致
+      lineHeight = fontSize * 1.5
+    }
+
+    const pretext = await loadPretext()
+    let targetScrollTop = 0
+
+    if (pretext) {
+      // 方案：计算目标逻辑行之前所有完整行的高度
+      // 如果目标在第 10 行，我们测量前 9 行的文本，并加上它们最后的换行符
+      const textBefore = lines.slice(0, targetLogicalLine).join('\n') + (targetLogicalLine > 0 ? '\n' : '')
+      const prepared = pretext.prepare(textBefore, font, { whiteSpace: 'pre-wrap' })
+      const layoutResult = pretext.layout(prepared, width, lineHeight)
+
+      // 居中计算：目标位置 = 之前的总高度 - 编辑器高度的一半 + 当前行高的一半
+      // 这里 layoutResult.height 恰好是目标逻辑行顶部的 Y 坐标
+      targetScrollTop = layoutResult.height - (editor.clientHeight / 2) + (lineHeight / 2) + paddingTop
+    } else {
+      const totalLines = lines.length
+      const avgLineHeight = editor.scrollHeight / totalLines
+      targetScrollTop = (avgLineHeight * targetLogicalLine) - (editor.clientHeight / 2) + (avgLineHeight / 2)
+    }
+
+    targetScrollTop = Math.max(0, targetScrollTop)
+
+    // 设置光标并聚焦
+    editor.focus()
+    editor.setSelectionRange(charIndex, charIndex)
+
+    // 执行滚动
+    editor.scrollTop = targetScrollTop
     requestAnimationFrame(() => {
-      elements.memoEditor.scrollTop = targetScrollTop
-      elements.memoEditor.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      let charIndex = 0
-      for (let i = 0; i < targetLine; i++) {
-        charIndex += lines[i].length + 1
-      }
-      elements.memoEditor.selectionStart = elements.memoEditor.selectionEnd = charIndex
-      elements.memoEditor.focus()
+      editor.scrollTop = targetScrollTop
     })
   }
 }
@@ -445,6 +562,7 @@ function clearSearchInput(elements) {
 function handleSearchInput(elements) {
   const query = elements.searchInput.value.trim().toLowerCase()
   appData.searchQuery = query
+  if (globalThis.__DEV__) { trace('SEARCH', 'input_change', { query }) }
   elements.clearInputBtn.classList.toggle('hidden', !query)
   if (!query) {
     if (appData.debounceTimer) { clearTimeout(appData.debounceTimer); appData.debounceTimer = null }
@@ -476,6 +594,7 @@ function scheduleFirstSearchOnce(elements) {
 function performSearch(elements) {
   const query = appData.searchQuery
   if (!query) { showEditorPage(elements); return }
+  if (globalThis.__DEV__) { trace('SEARCH', 'search_start', { query }) }
   let allAddresses = []
   Object.keys(appData.files).forEach(fileName => {
     const file = appData.files[fileName]
@@ -484,6 +603,7 @@ function performSearch(elements) {
     allAddresses = allAddresses.concat(fileAddresses)
   })
   const filteredAddresses = searchAddresses(allAddresses, query)
+  if (globalThis.__DEV__) { trace('SEARCH', 'search_done', { query, total: allAddresses.length, matched: filteredAddresses.length }) }
   showSearchResultsPage(filteredAddresses, elements)
 }
 
@@ -567,4 +687,12 @@ export const search = {
   handleSearchFocus,
   clearSearchInput,
   scrollToAddress
+}
+
+export const __test__ = {
+  parseAddressContent,
+  searchAddresses,
+  splitAddressIntoWords,
+  generatePinyinIndex,
+  setPinyinLib: (lib) => { pinyinLib = lib }
 }

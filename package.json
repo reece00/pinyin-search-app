@@ -11,6 +11,7 @@
     "build": "npm run build:css",
     "lint": "eslint \"public/**/*.js\" -c ./config/eslint.config.js",
     "lint:fix": "eslint \"public/**/*.js\" --fix -c ./config/eslint.config.js",
+    "test:parser": "node tests/parser-search-smoke.mjs",
     "stylelint": "stylelint \"config/tailwind-input.css\" --config ./config/.stylelintrc.json",
     "stylelint:fix": "stylelint \"config/tailwind-input.css\" --fix --config ./config/.stylelintrc.json"
   },
@@ -26,5 +27,9 @@
   "browserslist": [
     "ios_saf >= 18",
     "not dead"
-  ]
+  ],
+  "dependencies": {
+    "@chenglou/pretext": "^0.0.3",
+    "pinyin-pro": "^3.28.0"
+  }
 }

@@ -96,6 +96,7 @@ html, body {
   background-color: var(--bg-card);
   color: var(--text-main);
   border-color: var(--border-color);
+  line-height: 1.5; /* 显式设置行高，便于精确计算跳转位置 */
 }
 
 /* 搜索结果关闭按钮样式 */

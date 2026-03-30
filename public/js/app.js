@@ -1,16 +1,19 @@
 // 导入各模块
-import { appData, loadDataFromLocalStorage, saveCurrentFile, saveSettingsToLocalStorage, initDarkMode, setDarkMode } from './app-data.js';
+import { 
+  appData, updateState, subscribe, loadDataFromLocalStorage, 
+  saveCurrentFile, initDarkMode, setDarkMode 
+} from './app-data.js';
 import { files, search } from './features.js';
 import {
-  showToast, initErrorMonitor, openClientLogOverlay
+  showToast, initErrorMonitor, openClientLogOverlay, trace,
+  onClickOutside, toggleVisibility
 } from './ui-utils.js';
+import { checkPWAStatus, registerServiceWorker, initAutoExit } from './pwa-helper.js';
 
 // 全局 DOM 元素引用
 let elements = {};
 // 存储外部点击事件处理函数引用，用于正确移除监听器
 let outsideClickHandler = null;
-// 自动退出定时器
-let autoExitTimer = null;
 
 // 处理编辑器输入
 function handleEditorInput() {
@@ -147,33 +150,20 @@ function setupEditorSwipe() {
     elements.nextFileButton.addEventListener('click', () => switchToNextFile());
   }
   if (elements.secondaryMenuBtn && elements.secondaryMenu) {
-    // 阻止按钮点击事件冒泡，避免立即触发外部关闭
     elements.secondaryMenuBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      // 如果已有监听器，先移除
-      if (outsideClickHandler) {
-        document.removeEventListener('click', outsideClickHandler);
-        outsideClickHandler = null;
-      }
-      elements.secondaryMenu.classList.toggle('hidden');
-      if (!elements.secondaryMenu.classList.contains('hidden')) {
-        // 延迟绑定外部点击关闭，避免本次点击被捕获
-        setTimeout(() => {
-          outsideClickHandler = function handleOutsideClick(event) {
-            if (elements.secondaryMenu && !elements.secondaryMenu.contains(event.target)) {
-              elements.secondaryMenu.classList.add('hidden');
-              if (outsideClickHandler) {
-                document.removeEventListener('click', outsideClickHandler);
-                outsideClickHandler = null;
-              }
-            }
-          };
-          document.addEventListener('click', outsideClickHandler);
-        }, 0);
+      const isHidden = elements.secondaryMenu.classList.contains('hidden');
+      toggleVisibility(elements.secondaryMenu, isHidden);
+      
+      if (isHidden) {
+        if (outsideClickHandler) outsideClickHandler();
+        outsideClickHandler = onClickOutside(elements.secondaryMenu, () => {
+          toggleVisibility(elements.secondaryMenu, false);
+          outsideClickHandler = null;
+        });
       } else {
-        // 菜单关闭时移除监听器
         if (outsideClickHandler) {
-          document.removeEventListener('click', outsideClickHandler);
+          outsideClickHandler();
           outsideClickHandler = null;
         }
       }
@@ -181,168 +171,70 @@ function setupEditorSwipe() {
     // 菜单内部点击不触发外部关闭
     elements.secondaryMenu.addEventListener('click', (e) => e.stopPropagation());
   }
-  if (elements.menuSaveBtn && elements.secondaryMenu) {
-    elements.menuSaveBtn.addEventListener('click', () => {
+  
+  // 菜单项行为定义
+  const menuActions = {
+    menuSaveBtn: () => {
       saveCurrentFile(elements);
       showToast('已保存', elements);
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  // 自动滚底部开关
-  if (elements.menuScrollOnOpenBtn && elements.secondaryMenu) {
-    const updateScrollOnOpenLabel = () => {
-      elements.menuScrollOnOpenBtn.textContent = `加载后滚底部：${appData.autoScrollOnOpen ? '开' : '关'}`;
-    };
-    updateScrollOnOpenLabel();
-    elements.menuScrollOnOpenBtn.addEventListener('click', () => {
-      appData.autoScrollOnOpen = !appData.autoScrollOnOpen;
-      saveSettingsToLocalStorage();
-      updateScrollOnOpenLabel();
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  // 英文键盘模式（密码框）开关
-  if (elements.menuPasswordModeBtn && elements.secondaryMenu) {
-    const updatePasswordMode = () => {
-      const isEnabled = appData.passwordModeEnabled;
-      elements.menuPasswordModeBtn.textContent = `英文键盘模式：${isEnabled ? '开' : '关'}`;
-      if (elements.searchInput) {
-        elements.searchInput.type = isEnabled ? 'password' : 'text';
-      }
-    };
-    // 初始状态更新
-    updatePasswordMode();
-
-    elements.menuPasswordModeBtn.addEventListener('click', () => {
-      appData.passwordModeEnabled = !appData.passwordModeEnabled;
-      saveSettingsToLocalStorage();
-      updatePasswordMode();
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-
-  // 暗色模式切换
-  if (elements.menuDarkModeBtn && elements.secondaryMenu) {
-    const darkModeLabels = {
-      system: '自动',
-      light: '浅色',
-      dark: '深色'
-    };
-
-    const updateDarkModeLabel = () => {
-      elements.menuDarkModeBtn.textContent = `暗色模式：${darkModeLabels[appData.darkMode]}`;
-    };
-
-    updateDarkModeLabel();
-
-    elements.menuDarkModeBtn.addEventListener('click', () => {
+    },
+    menuScrollOnOpenBtn: () => {
+      updateState({ autoScrollOnOpen: !appData.autoScrollOnOpen }, { saveSettings: true });
+    },
+    menuPasswordModeBtn: () => {
+      updateState({ passwordModeEnabled: !appData.passwordModeEnabled }, { saveSettings: true });
+    },
+    menuDarkModeBtn: () => {
       const modes = ['system', 'light', 'dark'];
-      const currentIndex = modes.indexOf(appData.darkMode);
-      const nextMode = modes[(currentIndex + 1) % modes.length];
+      const nextMode = modes[(modes.indexOf(appData.darkMode) + 1) % modes.length];
       setDarkMode(nextMode);
-      updateDarkModeLabel();
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-
-  // 自动退出时间设置
-  if (elements.menuAutoExitBtn && elements.secondaryMenu) {
-    const updateAutoExitLabel = () => {
-      const mins = appData.autoExitMinutes;
-      elements.menuAutoExitBtn.textContent = `自动退出：${mins > 0 ? mins + '分钟' : '已禁用'}`;
-    };
-
-    updateAutoExitLabel();
-
-    elements.menuAutoExitBtn.addEventListener('click', () => {
+    },
+    menuAutoExitBtn: () => {
       const input = prompt('请输入后台自动退出时间（分钟，0表示禁用）:', String(appData.autoExitMinutes));
       if (input !== null) {
         const val = parseInt(input);
         if (!isNaN(val) && val >= 0) {
-          appData.autoExitMinutes = val;
-          saveSettingsToLocalStorage();
-          updateAutoExitLabel();
+          updateState({ autoExitMinutes: val }, { saveSettings: true });
           showToast(`已设置为 ${val > 0 ? val + ' 分钟' : '禁用'} 后自动退出`, elements);
         } else {
           showToast('请输入有效的数字', elements);
         }
       }
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-
-  // 直接退出
-  if (elements.menuExitBtn && elements.secondaryMenu) {
-    elements.menuExitBtn.addEventListener('click', () => {
-      elements.secondaryMenu.classList.add('hidden');
-      handleExit();
-    });
-  }
-
-  if (elements.menuRenameFileBtn && elements.secondaryMenu) {
-    elements.menuRenameFileBtn.addEventListener('click', () => {
-      files.handleRenameFile(elements);
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  if (elements.menuNewFileBtn && elements.secondaryMenu) {
-    elements.menuNewFileBtn.addEventListener('click', () => {
-      files.handleNewFile(elements);
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  if (elements.menuDeleteBtn && elements.secondaryMenu) {
-    elements.menuDeleteBtn.addEventListener('click', () => {
-      if (appData.currentFile) {
-        files.handleDeleteFile(appData.currentFile, elements);
-      }
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  if (elements.menuPasteBtn && elements.secondaryMenu) {
-    elements.menuPasteBtn.addEventListener('click', () => {
-      files.handleImportClipboard(elements);
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  if (elements.menuRenameResetBtn && elements.secondaryMenu) {
-    elements.menuRenameResetBtn.addEventListener('click', () => {
-      files.handleResetFilename(elements);
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  if (elements.menuSyncBtn && elements.secondaryMenu) {
-    elements.menuSyncBtn.addEventListener('click', () => {
-      import('./webdav.js').then(({ runWebDavSync }) => { // 按需加载同步模块（模块相对路径，兼容子目录部署）
-        runWebDavSync();
-      }).catch((e) => {
-        console.error('加载同步模块失败', e);
-      });
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  if (elements.menuLogPanelBtn && elements.secondaryMenu) {
-    elements.menuLogPanelBtn.addEventListener('click', () => {
-      openClientLogOverlay();
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  if (elements.menuLoadFontBtn && elements.secondaryMenu) {
-    elements.menuLoadFontBtn.addEventListener('click', () => {
+    },
+    menuExitBtn: () => handleExit(),
+    menuRenameFileBtn: () => files.handleRenameFile(elements),
+    menuNewFileBtn: () => files.handleNewFile(elements),
+    menuDeleteBtn: () => appData.currentFile && files.handleDeleteFile(appData.currentFile, elements),
+    menuPasteBtn: () => files.handleImportClipboard(elements),
+    menuRenameResetBtn: () => files.handleResetFilename(elements),
+    menuSyncBtn: () => {
+      import('./webdav.js').then(({ runWebDavSync }) => runWebDavSync())
+        .catch(e => console.error('加载同步模块失败', e));
+    },
+    menuLogPanelBtn: () => openClientLogOverlay(),
+    menuLoadFontBtn: () => {
       if (document.body.classList.contains('no-custom-font')) {
         document.body.classList.remove('no-custom-font');
         elements.menuLoadFontBtn.disabled = true;
         elements.menuLoadFontBtn.textContent = '已加载';
       }
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
-  if (elements.menuLoadExampleBtn && elements.secondaryMenu) {
-    elements.menuLoadExampleBtn.addEventListener('click', () => {
-      files.handleLoadExample(elements);
-      elements.secondaryMenu.classList.add('hidden');
-    });
-  }
+    },
+    menuLoadExampleBtn: () => files.handleLoadExample(elements)
+  };
+
+  // 批量绑定菜单项
+  Object.entries(menuActions).forEach(([id, action]) => {
+    if (elements[id]) {
+      elements[id].addEventListener('click', () => {
+        action();
+        toggleVisibility(elements.secondaryMenu, false);
+        if (outsideClickHandler) {
+          outsideClickHandler();
+          outsideClickHandler = null;
+        }
+      });
+    }
+  });
   elements.searchInput.addEventListener('input', () => search.handleSearchInput(elements));
   elements.searchInput.addEventListener('focus', () => search.handleSearchFocus(elements));
   elements.clearInputBtn.addEventListener('click', () => search.clearSearchInput(elements));
@@ -360,6 +252,58 @@ function setupEditorSwipe() {
 
   // 绑定文件列表点击事件（由renderFileList函数内部绑定）
   setupEditorSwipe();
+}
+
+/**
+ * 响应式更新 UI
+ */
+function setupUIObservers() {
+  const darkModeLabels = { system: '自动', light: '浅色', dark: '深色' };
+
+  const updateUI = (patch) => {
+    // 自动滚底部标签
+    if ('autoScrollOnOpen' in patch) {
+      if (elements.menuScrollOnOpenVal) {
+        elements.menuScrollOnOpenVal.textContent = patch.autoScrollOnOpen ? '开' : '关';
+      }
+    }
+
+    // 英文键盘模式
+    if ('passwordModeEnabled' in patch) {
+      const isEnabled = patch.passwordModeEnabled;
+      if (elements.menuPasswordModeVal) {
+        elements.menuPasswordModeVal.textContent = isEnabled ? '开' : '关';
+      }
+      if (elements.searchInput) {
+        elements.searchInput.type = isEnabled ? 'password' : 'text';
+      }
+    }
+
+    // 暗色模式标签
+    if ('darkMode' in patch) {
+      if (elements.menuDarkModeVal) {
+        elements.menuDarkModeVal.textContent = darkModeLabels[patch.darkMode];
+      }
+    }
+
+    // 自动退出时间标签
+    if ('autoExitMinutes' in patch) {
+      const mins = patch.autoExitMinutes;
+      if (elements.menuAutoExitVal) {
+        elements.menuAutoExitVal.textContent = mins > 0 ? mins + '分钟' : '已禁用';
+      }
+    }
+  };
+
+  subscribe(updateUI);
+
+  // 初始同步 UI
+  updateUI({
+    autoScrollOnOpen: appData.autoScrollOnOpen,
+    passwordModeEnabled: appData.passwordModeEnabled,
+    darkMode: appData.darkMode,
+    autoExitMinutes: appData.autoExitMinutes
+  });
 }
 
 // 初始化应用
@@ -395,7 +339,11 @@ function initApp() {
     menuLoadFontBtn: document.getElementById('menu-load-font-btn'),
     menuLoadExampleBtn: document.getElementById('menu-load-example-btn'),
     menuDarkModeBtn: document.getElementById('menu-dark-mode-btn'),
+    menuDarkModeVal: document.getElementById('menu-dark-mode-val'),
     menuAutoExitBtn: document.getElementById('menu-auto-exit-btn'),
+    menuAutoExitVal: document.getElementById('menu-auto-exit-val'),
+    menuScrollOnOpenVal: document.getElementById('menu-scroll-on-open-val'),
+    menuPasswordModeVal: document.getElementById('menu-password-mode-val'),
     menuExitBtn: document.getElementById('menu-exit-btn'),
     searchInput: document.getElementById('search-input'),
     clearInputBtn: document.getElementById('clear-input-btn'),
@@ -422,6 +370,9 @@ function initApp() {
   // 渲染文件列表
   files.renderFileList(elements);
 
+  // 初始化 UI 观察者
+  setupUIObservers();
+
   // 打开最后编辑的文件；如果没有则打开第一个文件；如果没有任何文件则新建
   const fileKeys = Object.keys(appData.files);
   if (appData.currentFile && appData.files[appData.currentFile]) {
@@ -436,63 +387,55 @@ function initApp() {
   // 绑定事件
   bindEvents();
 
-  // 检测是否为 PWA 安装形态
-  const isPWAInstalled = (() => {
-    const isStandalone = typeof window.matchMedia === 'function' && window.matchMedia('(display-mode: standalone)').matches;
-    const isIOSStandalone = typeof navigator !== 'undefined' && /** @type {any} */(navigator).standalone === true;
-    return !!(isStandalone || isIOSStandalone);
-  })();
-
-  // 后台自动退出监听（仅在 PWA 模式下执行）
-  if (isPWAInstalled) {
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') {
-        const mins = appData.autoExitMinutes;
-        if (mins > 0) {
-          console.log(`应用进入后台，将在 ${mins} 分钟后退出`);
-          autoExitTimer = setTimeout(() => {
-            console.log('自动退出定时器触发');
-            handleExit();
-          }, mins * 60 * 1000);
-        }
-      } else {
-        if (autoExitTimer) {
-          console.log('应用回到前台，清除自动退出定时器');
-          clearTimeout(autoExitTimer);
-          autoExitTimer = null;
-        }
-      }
-    });
-  }
-
-  // 初始化 PWA 注册与安装提示（仅在 PWA 安装形态注册 SW）
-  const isSecure = typeof window !== 'undefined' && !!window.isSecureContext;
-  if (isPWAInstalled && 'serviceWorker' in navigator && isSecure) {
-    const registerSW = () => {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(registration => { console.log('Service Worker 注册成功:', registration.scope); })
-        .catch(error => { console.log('Service Worker 注册失败:', error); });
-
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('Service Worker 已接管页面（PWA）');
-      });
-
-      navigator.serviceWorker.ready.then(() => {
-        if (navigator.serviceWorker.controller) {
-          console.log('Service Worker 已就绪（PWA）');
-          navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' });
-        }
-      });
-    }
-
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      registerSW()
-    } else {
-      window.addEventListener('load', registerSW)
+  // PWA 与后台退出处理
+  const isPWA = checkPWAStatus();
+  if (isPWA) {
+    registerServiceWorker();
+    if (appData.autoExitMinutes > 0) {
+      initAutoExit(appData.autoExitMinutes, handleExit);
     }
   }
 
   console.log('应用初始化完成');
+
+  const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname) || 
+                  /^192\.168\./.test(location.hostname) || 
+                  /^10\./.test(location.hostname) || 
+                  /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(location.hostname);
+  const searchParams = new URLSearchParams(location.search);
+  const isDebugParamEnabled = ['1', 'true', 'yes'].includes((searchParams.get('debug') || '').toLowerCase());
+  const isDebugMode = isLocal || isDebugParamEnabled;
+
+  if (isDebugMode) {
+    globalThis.__DEV__ = {
+      appData,
+      elements,
+      performSearch: (q) => {
+        if (elements.searchInput) {
+          elements.searchInput.value = q;
+          search.handleSearchInput(elements);
+        }
+      },
+      getState: () => ({
+        currentFile: appData.currentFile,
+        filesCount: Object.keys(appData.files || {}).length,
+        searchQuery: appData.searchQuery
+      }),
+      trace
+    };
+    trace('DEBUG', 'hook_enabled', { hostname: location.hostname, debugParam: isDebugParamEnabled });
+  } else if ('__DEV__' in globalThis) {
+    try {
+      delete globalThis.__DEV__;
+    } catch {
+      globalThis.__DEV__ = undefined;
+    }
+    trace('DEBUG', 'hook_disabled', { hostname: location.hostname });
+  }
+
+  if (isDebugMode) {
+    globalThis.__DEV__.search = globalThis.__DEV__.performSearch;
+  }
 }
 
 // 导出初始化函数（通过全局对象挂载，规避类型检查限制）

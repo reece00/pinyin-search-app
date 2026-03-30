@@ -28,7 +28,12 @@ export default [
         URL: 'readonly',
         Response: 'readonly',
         location: 'readonly',
-        Blob: 'readonly'
+        Blob: 'readonly',
+        prompt: 'readonly',
+        globalThis: 'readonly',
+        URLSearchParams: 'readonly',
+        performance: 'readonly',
+        OffscreenCanvas: 'readonly'
       }
     },
     plugins: {

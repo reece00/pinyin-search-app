@@ -12,6 +12,41 @@ const appData = {
   autoExitMinutes: 1 // 默认 1 分钟后台自动退出
 };
 
+const listeners = [];
+
+/**
+ * 订阅状态变更
+ * @param {Function} callback (patch) => void
+ */
+function subscribe(callback) {
+  listeners.push(callback);
+  return () => {
+    const idx = listeners.indexOf(callback);
+    if (idx > -1) listeners.splice(idx, 1);
+  };
+}
+
+/**
+ * 统一更新状态并处理持久化与通知
+ * @param {Object} patch 要更新的状态片段
+ * @param {Object} options 
+ * @param {boolean} options.saveData 是否保存文件数据 (localStorage)
+ * @param {boolean} options.saveSettings 是否保存设置 (localStorage)
+ */
+function updateState(patch, options = {}) {
+  Object.assign(appData, patch);
+  
+  if (options.saveData) {
+    saveDataToLocalStorage();
+  }
+  if (options.saveSettings) {
+    saveSettingsToLocalStorage();
+  }
+  
+  // 通知订阅者
+  listeners.forEach(cb => cb(patch));
+}
+
 function loadDataFromLocalStorage() {
   const savedData = localStorage.getItem('addressBookData');
   if (savedData) {
@@ -53,12 +88,22 @@ function saveSettingsToLocalStorage() {
 
 function saveCurrentFile(elements) {
   if (!appData.currentFile || !appData.isModified) return;
+  
+  const newFiles = { ...appData.files };
   if (elements && elements.memoEditor) {
-    appData.files[appData.currentFile].content = elements.memoEditor.value;
+    newFiles[appData.currentFile] = {
+      ...newFiles[appData.currentFile],
+      content: elements.memoEditor.value,
+      lastModified: new Date().getTime()
+    };
+  } else {
+    newFiles[appData.currentFile].lastModified = new Date().getTime();
   }
-  appData.files[appData.currentFile].lastModified = new Date().getTime();
-  saveDataToLocalStorage();
-  appData.isModified = false;
+  
+  updateState({ 
+    files: newFiles,
+    isModified: false 
+  }, { saveData: true });
 }
 
 function applyDarkMode(mode) {
@@ -91,13 +136,14 @@ function initDarkMode() {
 }
 
 function setDarkMode(mode) {
-  appData.darkMode = mode;
-  saveSettingsToLocalStorage();
+  updateState({ darkMode: mode }, { saveSettings: true });
   applyDarkMode(mode);
 }
 
 export {
   appData,
+  updateState,
+  subscribe,
   loadDataFromLocalStorage,
   saveDataToLocalStorage,
   saveSettingsToLocalStorage,
