@@ -48,9 +48,9 @@ function handleEditorInput() {
 
 // 统一退出逻辑
 function handleExit() {
-  console.log('执行退出程序...');
+  console.log('执行重置程序...');
   saveCurrentFile(elements);
-  window.close();
+  window.location.replace('./');
 }
 
 function getFileOrder() {

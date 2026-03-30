@@ -66,23 +66,43 @@ export function registerServiceWorker() {
 }
 
 let autoExitTimer = null;
+let hiddenAtMs = null;
 
 export function initAutoExit(mins, exitCallback) {
   if (mins <= 0) return;
   
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
+      hiddenAtMs = Date.now();
+      if (autoExitTimer) {
+        clearTimeout(autoExitTimer);
+      }
       console.log(`应用进入后台，将在 ${mins} 分钟后退出`);
       autoExitTimer = setTimeout(() => {
         console.log('自动退出定时器触发');
+        hiddenAtMs = null;
         exitCallback();
       }, mins * 60 * 1000);
     } else {
+      if (hiddenAtMs) {
+        const elapsedMs = Date.now() - hiddenAtMs;
+        if (elapsedMs >= mins * 60 * 1000) {
+          if (autoExitTimer) {
+            clearTimeout(autoExitTimer);
+            autoExitTimer = null;
+          }
+          hiddenAtMs = null;
+          console.log('应用回到前台，后台时长已超阈值，立即退出');
+          exitCallback();
+          return;
+        }
+      }
       if (autoExitTimer) {
         console.log('应用回到前台，清除自动退出定时器');
         clearTimeout(autoExitTimer);
         autoExitTimer = null;
       }
+      hiddenAtMs = null;
     }
   });
 }
