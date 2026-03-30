@@ -138,9 +138,8 @@
             
             <div class="relative ml-auto">
               <button id="secondary-menu-btn" class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center">更多</button>
-              <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white dark:bg-gray-800 shadow-xl rounded-xl p-2 w-48 z-20 border border-gray-100 dark:border-gray-700">
+              <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white dark:bg-gray-800 shadow-xl rounded-xl p-2 w-48 max-h-[70dvh] overflow-y-auto z-20 border border-gray-100 dark:border-gray-700">
                 <!-- 文件组 -->
-                <div class="px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">文件</div>
                 <button id="menu-new-file-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">新建</button>
                 <button id="menu-save-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">保存</button>
                 <button id="menu-rename-file-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">重命名</button>
@@ -151,7 +150,6 @@
                 <div class="border-t border-gray-100 dark:border-gray-700 my-1.5"></div>
                 
                 <!-- 设置组 -->
-                <div class="px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">设置</div>
                 <button id="menu-dark-mode-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center justify-between">
                   <span>外观</span>
                   <span id="menu-dark-mode-val" class="text-xs text-gray-400">自动</span>
@@ -172,7 +170,6 @@
                 <div class="border-t border-gray-100 dark:border-gray-700 my-1.5"></div>
                 
                 <!-- 工具组 -->
-                <div class="px-3 py-1.5 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">工具</div>
                 <button id="menu-sync-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">WebDAV 同步</button>
                 <button id="menu-load-font-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">加载自定义字体</button>
                 <button id="menu-load-example-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">加载示例数据</button>
