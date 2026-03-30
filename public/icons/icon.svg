@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2563eb;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- 背景铺满，不带圆角，由系统决定遮罩形状 -->
+  <rect width="512" height="512" fill="url(#grad)"/>
+  
+  <!-- 主体图案整体缩放并居中，确保在安全区内 (80% 范围内) -->
+  <g transform="translate(256, 256) scale(0.85) translate(-256, -256)">
+    <!-- P 字母 -->
+    <path d="M160 140h100c60 0 100 40 100 90s-40 90-100 90h-40v100h-60V140zm60 120h40c30 0 50-20 50-45s-20-45-50-45h-40v90z" fill="white"/>
+    <!-- 右下角搜索/加号装饰 -->
+    <circle cx="380" cy="380" r="80" fill="white" fill-opacity="0.2" />
+    <path d="M380 330v100M330 380h100" stroke="white" stroke-width="20" stroke-linecap="round" />
+  </g>
+</svg>
