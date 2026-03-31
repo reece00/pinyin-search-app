@@ -24,7 +24,13 @@ const types = {
 };
 
 function send(res, status, data, headers) {
-  res.writeHead(status, headers);
+  const noCacheHeaders = {
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0',
+    ...headers
+  };
+  res.writeHead(status, noCacheHeaders);
   res.end(data);
 }
 
@@ -54,6 +60,18 @@ const server = http.createServer((req, res) => {
       }
       const ext = path.extname(finalPath).toLowerCase();
       const type = types[ext] || 'application/octet-stream';
+      
+      // 对于 HTML 文件，注入下载时间戳并清空构建时间占位符（如果未被 CI 替换）
+      if (ext === '.html') {
+        let content = data.toString();
+        content = content.replace('{{DOWNLOAD_TIME}}', Date.now().toString());
+        // 如果没有被 CI 替换过，则将其清空
+        if (content.includes('{{BUILD_TIME}}')) {
+          content = content.replace('{{BUILD_TIME}}', '');
+        }
+        return send(res, 200, Buffer.from(content), { 'Content-Type': type });
+      }
+      
       send(res, 200, data, { 'Content-Type': type });
     });
   });

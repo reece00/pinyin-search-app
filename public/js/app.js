@@ -1,19 +1,88 @@
 // 导入各模块
-import { 
-  appData, updateState, subscribe, loadDataFromLocalStorage, 
-  saveCurrentFile, initDarkMode, setDarkMode 
+import {
+  appData, updateState, subscribe, loadDataFromLocalStorage,
+  saveCurrentFile, initDarkMode, setDarkMode
 } from './app-data.js';
 import { files, search } from './features.js';
 import {
   showToast, initErrorMonitor, openClientLogOverlay, trace,
-  onClickOutside, toggleVisibility
+  getLogs, onClickOutside, toggleVisibility
 } from './ui-utils.js';
-import { checkPWAStatus, registerServiceWorker, initAutoExit } from './pwa-helper.js';
+import { checkPWAStatus, registerServiceWorker, initAutoExit, getSWStatus } from './pwa-helper.js';
 
 // 全局 DOM 元素引用
 let elements = {};
 // 存储外部点击事件处理函数引用，用于正确移除监听器
 let outsideClickHandler = null;
+let viewportFixRaf = null;
+
+/**
+ * 初始化版本与环境信息展示
+ */
+function initVersionInfo() {
+  const statusBar = document.getElementById('app-status-bar');
+  if (!statusBar) return;
+
+  const buildTimeStr = window['APP_BUILD_TIME'] || '';
+  const downloadTimeStr = window['APP_DOWNLOAD_TIME'] || '';
+
+  const now = Date.now();
+  let displayContent = '';
+  const logInfo = {
+    env: location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'local' : 'production',
+    deviceId: localStorage.getItem('logDeviceId') || 'unknown'
+  };
+
+  const formatDate = (ts) => {
+    if (!ts || isNaN(ts)) return null;
+    const d = new Date(Number(ts));
+    return `${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+  };
+
+  // 1. 处理构建时间 (优先显示)
+  if (buildTimeStr && !buildTimeStr.startsWith('{{')) {
+    const formatted = formatDate(buildTimeStr);
+    if (formatted) {
+      displayContent = `构建: ${formatted}`;
+      logInfo.buildTime = new Date(Number(buildTimeStr)).toISOString();
+    }
+  }
+
+  // 2. 处理下载时间 (作为补充或备选)
+  if (downloadTimeStr && !downloadTimeStr.startsWith('{{')) {
+    const downloadTime = Number(downloadTimeStr);
+    const formatted = formatDate(downloadTime);
+    if (formatted) {
+      if (!displayContent) displayContent = `下载: ${formatted}`;
+      logInfo.downloadTime = new Date(downloadTime).toISOString();
+
+      // 3. 缓存检测逻辑 (超过1分钟视为可能存在缓存)
+      if (Math.abs(now - downloadTime) > 60000) {
+        displayContent += ' (可能存在缓存)';
+        logInfo.cacheWarning = true;
+      }
+    }
+  }
+
+  // 更新 UI
+  statusBar.textContent = displayContent;
+
+  // 输出详细日志
+  trace('SYSTEM', 'startup_info', logInfo);
+}
+
+function syncViewportHeight() {
+  if (viewportFixRaf) {
+    window.cancelAnimationFrame(viewportFixRaf);
+  }
+  viewportFixRaf = requestAnimationFrame(() => {
+    const h = Math.round((window.visualViewport && window.visualViewport.height) ? window.visualViewport.height : window.innerHeight);
+    if (h > 0 && document.body) {
+      document.body.style.height = `${h}px`;
+    }
+    viewportFixRaf = null;
+  });
+}
 
 // 处理编辑器输入
 function handleEditorInput() {
@@ -157,7 +226,7 @@ function setupEditorSwipe() {
       e.stopPropagation();
       const isHidden = elements.secondaryMenu.classList.contains('hidden');
       toggleVisibility(elements.secondaryMenu, isHidden);
-      
+
       if (isHidden) {
         if (outsideClickHandler) outsideClickHandler();
         outsideClickHandler = onClickOutside(elements.secondaryMenu, () => {
@@ -174,7 +243,7 @@ function setupEditorSwipe() {
     // 菜单内部点击不触发外部关闭
     elements.secondaryMenu.addEventListener('click', (e) => e.stopPropagation());
   }
-  
+
   // 菜单项行为定义
   const menuActions = {
     menuSaveBtn: () => {
@@ -390,20 +459,38 @@ function initApp() {
   // 绑定事件
   bindEvents();
 
+  // 初始化版本与状态展示
+  initVersionInfo();
+
   // PWA 与后台退出处理
   const isPWA = checkPWAStatus();
   if (isPWA) {
-    registerServiceWorker();
+    syncViewportHeight();
+    requestAnimationFrame(() => syncViewportHeight());
+    setTimeout(() => syncViewportHeight(), 120);
+    window.addEventListener('resize', syncViewportHeight);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', syncViewportHeight);
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        syncViewportHeight();
+        setTimeout(() => syncViewportHeight(), 120);
+      }
+    });
     if (appData.autoExitMinutes > 0) {
       initAutoExit(appData.autoExitMinutes, handleExit);
     }
   }
 
+  // 始终尝试注册或清理 SW (内部会判断 PWA/Debug 状态)
+  registerServiceWorker();
+
   console.log('应用初始化完成');
 
-  const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname) || 
-                  /^192\.168\./.test(location.hostname) || 
-                  /^10\./.test(location.hostname) || 
+  const isLocal = ['localhost', '127.0.0.1', '::1'].includes(location.hostname) ||
+                  /^192\.168\./.test(location.hostname) ||
+                  /^10\./.test(location.hostname) ||
                   /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(location.hostname);
   const searchParams = new URLSearchParams(location.search);
   const isDebugParamEnabled = ['1', 'true', 'yes'].includes((searchParams.get('debug') || '').toLowerCase());
@@ -422,11 +509,33 @@ function initApp() {
       getState: () => ({
         currentFile: appData.currentFile,
         filesCount: Object.keys(appData.files || {}).length,
-        searchQuery: appData.searchQuery
+        searchQuery: appData.searchQuery,
+        swStatus: getSWStatus(),
+        viewport: {
+          w: window.innerWidth,
+          h: window.innerHeight,
+          vwH: window.visualViewport ? window.visualViewport.height : null
+        }
       }),
+      diagnose: () => {
+        const state = globalThis.__DEV__.getState();
+        const logs = getLogs(20);
+        const report = {
+          timestamp: new Date().toISOString(),
+          appState: state,
+          lastLogs: logs.map(l => `[${l.level}] ${l.message}`),
+          domStatus: {
+            editorHidden: elements.editorPage.classList.contains('hidden'),
+            searchHidden: elements.searchResultsPage.classList.contains('hidden'),
+            menuHidden: elements.secondaryMenu ? elements.secondaryMenu.classList.contains('hidden') : true
+          }
+        };
+        console.log('[DIAGNOSE] Snapshot:', report);
+        return report;
+      },
       trace
     };
-    trace('DEBUG', 'hook_enabled', { hostname: location.hostname, debugParam: isDebugParamEnabled });
+    trace('DEBUG', 'hook_enabled', { hostname: location.hostname, debugParam: isDebugParamEnabled, swStatus: getSWStatus() });
   } else if ('__DEV__' in globalThis) {
     try {
       delete globalThis.__DEV__;

@@ -22,11 +22,11 @@
     "stylelint": "^16.25.0",
     "stylelint-config-standard": "^39.0.1",
     "stylelint-no-unsupported-browser-features": "^8.0.5",
-    "tailwindcss": "^3.4.18"
+    "tailwindcss": "^3.4.18",
+    "ws": "^8.20.0"
   },
   "browserslist": [
     "ios_saf >= 18",
     "not dead"
-  ],
-  "dependencies": {}
+  ]
 }

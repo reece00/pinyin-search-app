@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
-// 缓存版本标识 - GitHub Actions 部署时会自动更新时间戳 (见 .github/workflows/static.yml)
-// 本地开发使用固定版本 1.0.0，部署后会自动替换为时间戳
-const CACHE_VERSION = '1.0.0';
+// 缓存版本标识 - GitHub Actions 部署时会自动替换为时间戳 (见 .github/workflows/static.yml)
+// 示例字符串，本地开发直接使用；部署后会被替换为时间戳
+const CACHE_VERSION = 'dev';
 const CACHE_NAME = `pinyin-search-app-${CACHE_VERSION}`;
 // 在部分 IDE 中，`self` 会被当作 `Window` 类型。通过 `unknown` 中转再断言为 ServiceWorker 作用域。
 const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));

@@ -218,8 +218,9 @@ function renderFileList(elements) {
     }
     const fileInfo = document.createElement('div')
     fileInfo.className = 'flex items-center'
-    const fileIcon = document.createElement('i')
-    fileIcon.className = 'fa fa-file-text-o mr-3'
+    const fileIcon = document.createElement('span')
+    fileIcon.className = 'mr-3 text-base'
+    fileIcon.textContent = '📄'
     const fileName = document.createElement('div')
     fileName.className = 'text-sm'
     fileName.textContent = filename

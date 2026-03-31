@@ -29,9 +29,9 @@ function subscribe(callback) {
 /**
  * 统一更新状态并处理持久化与通知
  * @param {Object} patch 要更新的状态片段
- * @param {Object} options 
- * @param {boolean} options.saveData 是否保存文件数据 (localStorage)
- * @param {boolean} options.saveSettings 是否保存设置 (localStorage)
+ * @param {Object} [options] 
+ * @param {boolean} [options.saveData] 是否保存文件数据 (localStorage)
+ * @param {boolean} [options.saveSettings] 是否保存设置 (localStorage)
  */
 function updateState(patch, options = {}) {
   Object.assign(appData, patch);

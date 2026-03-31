@@ -197,11 +197,27 @@ function openClientLogOverlay() {
   render();
 }
 
+/**
+ * 语义化日志追踪函数
+ * 
+ * 技术说明：
+ * 1. 为什么不直接用 console.log.bind？
+ *    因为 trace 需要处理动态逻辑（traceId 生成、持久化、内存存储等），bind 无法胜任。
+ * 2. 调试建议：
+ *    为了在控制台看到准确的“业务侧”调用点，请在控制台中右键本文件，选择 "Add script to ignore list"。
+ */
 function trace(module, action, data, options = {}) {
   const level = options.level || 'log';
-  const traceId = options.traceId || `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  // 允许传入父 traceId 以维持链路
+  const traceId = options.traceId || globalThis.__LAST_TRACE_ID__ || `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
   const logger = typeof console[level] === 'function' ? console[level].bind(console) : console.log.bind(console);
-  logger(`[TRACE][${traceId}][${module}] ${action}`, data);
+  
+  // 如果是重要动作，更新全局最后的 traceId
+  if (options.persist !== false) {
+    globalThis.__LAST_TRACE_ID__ = traceId;
+  }
+
+  logger(`[TRACE][${traceId}][${module}] ${action}`, data || '');
   return traceId;
 }
 
@@ -275,12 +291,17 @@ function showMiniToast(message, duration = 3000) {
   }, duration);
 }
 
+function getLogs(limit = 1000) {
+  return __logStore.slice(-limit);
+}
+
 export {
   showToast,
   showMiniToast,
   initErrorMonitor,
   openClientLogOverlay,
   trace,
+  getLogs,
   onClickOutside,
   toggleVisibility
 };

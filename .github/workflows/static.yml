@@ -36,9 +36,12 @@ jobs:
         run: |
           # 获取当前时间戳
           TIMESTAMP=$(date +%s000)
-          # 更新service-worker.js中的缓存版本号，匹配包含字母、数字和点的版本号格式
+          # 更新service-worker.js中的缓存版本号
           sed -i "s/const CACHE_VERSION = '[^']*';/const CACHE_VERSION = '$TIMESTAMP';/g" public/service-worker.js
-          echo "已更新缓存版本号为: $TIMESTAMP"
+          # 更新index.html中的构建时间占位符，并清空下载时间占位符
+          sed -i "s/{{BUILD_TIME}}/$TIMESTAMP/g" public/index.html
+          sed -i "s/{{DOWNLOAD_TIME}}//g" public/index.html
+          echo "已更新构建时间戳: $TIMESTAMP"
 
       - name: Setup Node
         uses: actions/setup-node@v4

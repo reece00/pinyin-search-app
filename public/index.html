@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
   <meta name="color-scheme" content="light dark">
-  
+
   <!-- 阻塞脚本：极致首屏主题检测，防止暗色模式白屏闪烁 (FOUC) -->
   <script>
     (function() {
@@ -33,16 +33,21 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="地址备忘录">
 
-  
+
   <!-- manifest.json -->
   <link rel="manifest" href="manifest.json">
-  
+
+  <script>
+    window.APP_BUILD_TIME = "{{BUILD_TIME}}";
+    window.APP_DOWNLOAD_TIME = "{{DOWNLOAD_TIME}}";
+  </script>
+
   <!-- 自定义字体导入统一到 styles.css -->
-  
+
   <title>地址首字母搜索备忘录</title>
-  
+
   <!-- pinyin-pro 拼音转换库按需加载（移除同步引入以优化首屏） -->
-  
+
   <!-- 引入 Tailwind 编译后的样式文件 -->
   <link rel="stylesheet" href="css/tailwind.css">
   <!-- 引入外部样式文件（在 Tailwind 之后，确保自定义样式覆盖） -->
@@ -51,7 +56,7 @@
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y2bYp0AAAAASUVORK5CYII=">
 </head>
 <body class="bg-gray-50 dark:bg-gray-800 text-dark dark:text-gray-100 no-custom-font font-sans flex flex-col h-[100dvh] overflow-hidden">
-  
+
   <!-- 主要内容区域 -->
   <main class="flex-1 p-4 overflow-hidden flex flex-col min-h-0 h-0">
     <!-- 文本编辑器页面 -->
@@ -64,28 +69,28 @@
         地址1
         备注1
         备注2
-        
+
         地址2
         备注1
-        
+
         （地址和备注之间用空行分隔，地址放在第一行，备注放在后续行）"></textarea>
     </div>
-    
+
     <!-- 搜索结果页面 (初始隐藏) -->
     <div id="search-results-page" class="hidden flex-1 flex flex-col min-h-0 h-full">
-      
+
       <!-- 搜索结果列表容器 -->
       <div class="relative flex-1 flex flex-col min-h-0 h-full">
         <!-- 结果计数显示在右上角 -->
         <div class="absolute top-2 right-2 z-10">
           <span id="results-count" class="text-base bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-full font-normal shadow-sm">已找到 0 项</span>
         </div>
-        
+
         <!-- 搜索结果列表容器 -->
         <div id="search-results-list" class="space-y-3 overflow-y-auto flex-1 h-full min-h-0 bg-gray-100 dark:bg-gray-900">
           <!-- 搜索结果将通过JS动态生成 -->
         </div>
-        
+
         <!-- 未找到结果提示 -->
       <div id="no-results-message" class="hidden text-center py-10">
         <p class="text-gray-500 dark:text-gray-400">未找到匹配的地址</p>
@@ -94,28 +99,28 @@
         </p>
       </div>
       </div>
-      
+
       <!-- 关闭按钮放在右下角 -->
       <div id="search-results-close-container" class="hidden">
         <button id="close-search-results" class="text-secondary">关闭</button>
       </div>
     </div>
-    
+
     <!-- 自动保存提示 -->
   <div id="auto-save-indicator" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 dark:bg-gray-900 dark:bg-opacity-90 text-white px-4 py-2 rounded-lg text-sm z-50 hidden">
     <span id="save-status">已自动保存</span>
   </div>
   </main>
-  
+
   <!-- 底部功能区 -->
   <footer class="bg-white dark:bg-gray-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 flex-none z-10">
     <div class="flex flex-col space-y-4">
       <!-- 搜索框 -->
       <div class="relative">
-        <input 
-          type="text" 
-          id="search-input" 
-          placeholder="输入地址首字母搜索（如'bjs'查北京）" 
+        <input
+          type="text"
+          id="search-input"
+          placeholder="输入地址首字母搜索（如'bjs'查北京）"
           class="w-full pl-4 pr-10 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-dark dark:text-gray-100 focus:border-primary focus:ring focus:ring-blue-200 focus:outline-none"
           autocapitalize="off"
           autocorrect="off"
@@ -123,7 +128,7 @@
         >
         <button id="clear-input-btn" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary dark:text-gray-400 hidden px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600">清空</button>
       </div>
-      
+
       <!-- 按钮容器 - 将在搜索页面隐藏 -->
       <div id="action-buttons-container">
         <!-- 操作按钮 -->
@@ -135,7 +140,7 @@
               <button id="scroll-top-btn" class="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">到最上</button>
               <button id="scroll-bottom-btn" class="px-4 py-2 rounded-full bg-gray-100 dark:bg-gray-700 text-dark dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">到最下</button>
             </div>
-            
+
             <div class="relative ml-auto">
               <button id="secondary-menu-btn" class="bg-primary text-white px-4 py-2 rounded-full text-sm font-medium shadow-sm hover:bg-blue-600 transition-colors flex items-center">更多</button>
               <div id="secondary-menu" class="hidden absolute bottom-14 right-0 bg-white dark:bg-gray-800 shadow-xl rounded-xl p-2 w-48 max-h-[70dvh] overflow-y-auto z-20 border border-gray-100 dark:border-gray-700">
@@ -146,9 +151,9 @@
                 <button id="menu-rename-reset-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">重置文件名</button>
                 <button id="menu-paste-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">从剪切板导入</button>
                 <button id="menu-delete-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center">删除当前文件</button>
-                
+
                 <div class="border-t border-gray-100 dark:border-gray-700 my-1.5"></div>
-                
+
                 <!-- 设置组 -->
                 <button id="menu-dark-mode-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center justify-between">
                   <span>外观</span>
@@ -166,17 +171,17 @@
                   <span>自动退出</span>
                   <span id="menu-auto-exit-val" class="text-xs text-gray-400">1分钟</span>
                 </button>
-                
+
                 <div class="border-t border-gray-100 dark:border-gray-700 my-1.5"></div>
-                
+
                 <!-- 工具组 -->
                 <button id="menu-sync-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">WebDAV 同步</button>
                 <button id="menu-load-font-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">加载自定义字体</button>
                 <button id="menu-load-example-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">加载示例数据</button>
                 <button id="menu-log-panel-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-dark dark:text-gray-100 flex items-center">运行日志</button>
-                
+
                 <div class="border-t border-gray-100 dark:border-gray-700 my-1.5"></div>
-                
+
                 <button id="menu-exit-btn" class="w-full py-2 px-3 text-sm rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center">直接退出</button>
               </div>
             </div>
@@ -184,7 +189,7 @@
       </div>
     </div>
   </footer>
-  
+
   <!-- 文件切换弹窗 -->
   <dialog id="file-popup" class="p-0 bg-transparent backdrop:bg-black/50 w-full max-w-md m-auto rounded-lg shadow-xl open:flex flex-col max-h-[80vh]">
     <div class="bg-white dark:bg-gray-800 rounded-t-lg flex-grow overflow-auto">
@@ -201,7 +206,10 @@
       </button>
     </div>
   </dialog>
-  
+
+  <!-- 应用状态栏 (左上角微型字) -->
+  <div id="app-status-bar" class="fixed text-gray-400 pointer-events-none z-[9999] leading-none whitespace-nowrap" style="top: 2px; left: 4px; font-size: 10px; opacity: 0.6;"></div>
+
   <!-- 提示消息（初始隐藏） -->
   <div id="toast" class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 dark:bg-gray-900 dark:bg-opacity-90 text-white px-4 py-2 rounded-lg text-sm z-50 hidden">
     <span id="toast-message"></span>
@@ -213,7 +221,7 @@
   <script type="module" src="js/pwa-helper.js"></script>
   <script type="module" src="js/features.js"></script>
   <script type="module" src="js/app.js"></script>
-  
+
   <!-- 初始化应用 -->
   <script>
     document.addEventListener('DOMContentLoaded', () => {
