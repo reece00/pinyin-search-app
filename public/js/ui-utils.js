@@ -166,7 +166,8 @@ function openClientLogOverlay() {
     __logStore.slice(-200).forEach(rec => {
       const el = document.createElement('div');
       el.className = `log-item ${rec.level === 'error' ? 'error' : (rec.level === 'warn' ? 'warn' : 'info')}`;
-      el.textContent = `[${rec.ts}] ${rec.level.toUpperCase()} ${rec.message}`;
+      const time = rec.ts ? rec.ts.split('T')[1]?.slice(0, 8) : '';
+      el.textContent = `[${time}] ${rec.level.toUpperCase()} ${rec.message}`;
       list.appendChild(el);
       
       if (rec.stack) {
