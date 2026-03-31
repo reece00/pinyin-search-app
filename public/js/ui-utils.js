@@ -125,6 +125,9 @@ function initErrorMonitor(options = {}) {
 
 function openClientLogOverlay() {
   if (document.getElementById('client-log-overlay')) return;
+  const style = document.createElement('style');
+  style.textContent = `#client-log-list .log-item { white-space: pre-wrap; word-break: break-all; font-family: monospace; font-size: 12px; }`;
+  document.head.appendChild(style);
   const wrap = document.createElement('div');
   wrap.id = 'client-log-overlay';
   
