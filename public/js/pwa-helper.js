@@ -165,33 +165,37 @@ export function initAutoExit(mins, exitCallback) {
   if (mins <= 0) return;
 
   document.addEventListener('visibilitychange', () => {
+    const now = Date.now();
     if (document.visibilityState === 'hidden') {
-      hiddenAtMs = Date.now();
+      hiddenAtMs = now;
       if (autoExitTimer) {
         clearTimeout(autoExitTimer);
+        trace('闲置关闭页面', '重新计时', { mins });
       }
-      trace('PWA', 'hidden', { mins });
+      const timeoutMs = mins * 60 * 1000;
       autoExitTimer = setTimeout(() => {
-        trace('PWA', 'auto_exit_trigger');
+        trace('闲置关闭页面', '倒计时结束，准备重启');
         hiddenAtMs = null;
         exitCallback();
-      }, mins * 60 * 1000);
+      }, timeoutMs);
+      trace('闲置关闭页面', '进入后台，开始倒计时', { mins, timeoutMs, hiddenAt: new Date(now).toISOString() });
     } else {
       if (hiddenAtMs) {
-        const elapsedMs = Date.now() - hiddenAtMs;
-        if (elapsedMs >= mins * 60 * 1000) {
+        const elapsedMs = now - hiddenAtMs;
+        const timeoutMs = mins * 60 * 1000;
+        if (elapsedMs >= timeoutMs) {
           if (autoExitTimer) {
             clearTimeout(autoExitTimer);
             autoExitTimer = null;
           }
           hiddenAtMs = null;
-          trace('PWA', 'resume_exit_immediate', { elapsedMs });
+          trace('闲置关闭页面', '超时，准备重启', { elapsedMs, timeoutMs, overflow: elapsedMs - timeoutMs });
           exitCallback();
           return;
         }
+        trace('闲置关闭页面', '回到前台，取消倒计时', { elapsedMs, timeoutMs, remainingMs: timeoutMs - elapsedMs });
       }
       if (autoExitTimer) {
-        trace('PWA', 'resume_clear_timer');
         clearTimeout(autoExitTimer);
         autoExitTimer = null;
       }
