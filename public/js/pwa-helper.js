@@ -193,7 +193,8 @@ export function initAutoExit(mins, exitCallback) {
           exitCallback();
           return;
         }
-        trace('闲置关闭页面', '回到前台，取消倒计时', { elapsedMs, timeoutMs, remainingMs: timeoutMs - elapsedMs });
+        const remainingSec = ((timeoutMs - elapsedMs) / 1000).toFixed(1);
+        trace('闲置关闭页面', `回到前台，取消倒计时（还剩${remainingSec}秒）`, { elapsedMs, timeoutMs });
       }
       if (autoExitTimer) {
         clearTimeout(autoExitTimer);
