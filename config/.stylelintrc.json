@@ -4,6 +4,12 @@
   "ignoreFiles": ["public/css/**", "tailwind.css"],
   "rules": {
     "plugin/no-unsupported-browser-features": [true, { "severity": "warning", "ignorePartialSupport": true }],
-    "at-rule-no-unknown": [true, { "ignoreAtRules": ["tailwind", "apply", "variants", "responsive", "screen"] }]
+    "at-rule-no-unknown": [true, { "ignoreAtRules": ["tailwind", "apply", "variants", "responsive", "screen", "source", "theme", "config", "plugin", "utility", "variant"] }],
+    "import-notation": null,
+    "value-keyword-case": null,
+    "color-function-notation": null,
+    "alpha-value-notation": null,
+    "custom-property-empty-line-before": null,
+    "color-function-alias-notation": null
   }
 }
