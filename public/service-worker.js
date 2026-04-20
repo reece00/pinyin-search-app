@@ -88,7 +88,7 @@ self.addEventListener('fetch', /** @param {FetchEvent} event */ (event) => {
                 .then(response => response || caches.match('./index.html'));
             }
             // 其他资源请求失败返回一个基本的响应，而不是 undefined
-            return new Response('Network error happened', {
+            return new Response('网络请求失败', {
               status: 408,
               headers: { 'Content-Type': 'text/plain' }
             });

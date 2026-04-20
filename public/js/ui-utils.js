@@ -167,7 +167,10 @@ function openClientLogOverlay() {
       const el = document.createElement('div');
       el.className = `log-item ${rec.level === 'error' ? 'error' : (rec.level === 'warn' ? 'warn' : 'info')}`;
       const time = rec.ts ? rec.ts.split('T')[1]?.slice(0, 8) : '';
-      el.textContent = `[${time}] ${rec.level.toUpperCase()} ${rec.message}`;
+      const levelPrefix = (rec.level === 'error' || rec.level === 'warn')
+        ? `${rec.level.toUpperCase()} `
+        : '';
+      el.textContent = `[${time}] ${levelPrefix}${rec.message}`;
       list.appendChild(el);
       
       if (rec.stack) {
@@ -180,7 +183,10 @@ function openClientLogOverlay() {
   }
   copyBtn.onclick = async function() {
     try {
-      const txt = __logStore.map(r => `[${r.ts}] ${r.level.toUpperCase()} ${r.message}${r.stack ? '\n'+r.stack : ''}`).join('\n');
+      const txt = __logStore.map(r => {
+        const levelPrefix = (r.level === 'error' || r.level === 'warn') ? `${r.level.toUpperCase()} ` : '';
+        return `[${r.ts}] ${levelPrefix}${r.message}${r.stack ? '\n'+r.stack : ''}`;
+      }).join('\n');
       await navigator.clipboard.writeText(txt);
     } catch {}
   };
